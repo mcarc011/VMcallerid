@@ -341,6 +341,43 @@ def load_calls():
             "last_good_calls",
             []
         )
+
+# ============================================================
+# FILTER BY USER EXTENSION
+# ============================================================
+
+def filter_calls_by_extension(
+    calls,
+    extension_number
+):
+
+    extension_number = str(
+        extension_number
+    ).strip()
+
+    if not extension_number:
+        return []
+
+    visible = []
+
+    for call in calls:
+
+        call_extensions = {
+            str(x).strip()
+            for x in call.get(
+                "extension_numbers",
+                []
+            )
+        }
+
+        if extension_number in call_extensions:
+
+            visible.append(
+                call
+            )
+
+    return visible
+
 # ============================================================
 # TABS
 # ============================================================
@@ -497,42 +534,7 @@ with tab2:
 
 
     all_active_calls_view()
-# ============================================================
-# FILTER BY USER EXTENSION
-# ============================================================
-
-def filter_calls_by_extension(
-    calls,
-    extension_number
-):
-
-    extension_number = str(
-        extension_number
-    ).strip()
-
-    if not extension_number:
-        return []
-
-    visible = []
-
-    for call in calls:
-
-        call_extensions = {
-            str(x).strip()
-            for x in call.get(
-                "extension_numbers",
-                []
-            )
-        }
-
-        if extension_number in call_extensions:
-
-            visible.append(
-                call
-            )
-
-    return visible
-
+    
 # ============================================================
 # HEADER
 # ============================================================
