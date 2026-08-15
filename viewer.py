@@ -272,8 +272,10 @@ def extension_name(
 # ============================================================
 # LOAD CALL DATA
 # ============================================================
-
+import time
 import requests
+import streamlit as st
+
 
 def load_calls():
 
@@ -282,28 +284,62 @@ def load_calls():
         + "/api/active-calls"
     )
 
-    try:
+    headers = {
+        "X-API-Key":
+            st.secrets["CALLER_ID_API_KEY"]
+    }
 
-        response = requests.get(
-            url,
-            headers={
-                "X-API-Key":
-                    st.secrets["CALLER_ID_API_KEY"]
-            },
-            timeout=3
-        )
+    # Try a few times because ngrok can occasionally
+    # drop an HTTPS connection.
+    for attempt in range(3):
 
-        response.raise_for_status()
+        try:
 
-        return response.json()
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=5
+            )
 
-    except Exception as e:
+            response.raise_for_status()
 
-        st.error(
-            f"Caller ID server unavailable: {e}"
-        )
+            return response.json()
 
-        return []
+        except (
+            requests.exceptions.SSLError,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout
+        ) as e:
+
+            if attempt < 2:
+                time.sleep(0.5)
+                continue
+
+            # Don't crash the dashboard for a transient
+            # network failure.
+            print(
+                "Caller ID API temporary network error:",
+                e
+            )
+
+            return []
+
+        except requests.exceptions.HTTPError as e:
+
+            st.error(
+                f"Caller ID server returned an HTTP error: {e}"
+            )
+
+            return []
+
+        except Exception as e:
+
+            print(
+                "Caller ID API error:",
+                e
+            )
+
+            return []
 
 # ============================================================
 # FILTER BY USER EXTENSION
