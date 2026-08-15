@@ -393,14 +393,20 @@ default_extension = ""
 if allowed_extensions and "*" not in allowed_extensions:
     default_extension = allowed_extensions[0]
 
-typed_extension = st.text_input(
-    "Extension ID",
-    value=st.session_state.get(
-        "typed_extension",
-        default_extension
-    ),
-    placeholder="Enter RingCentral extension ID"
+left, middle, right = st.columns(
+    [1, 1.2, 4]
 )
+
+with middle:
+
+    typed_extension = st.text_input(
+        "Extension ID",
+        value=st.session_state.get(
+            "typed_extension",
+            default_extension
+        ),
+        placeholder="Extension ID"
+    )
 
 typed_extension = typed_extension.strip()
 
@@ -660,7 +666,7 @@ def live_calls():
             selected_label
         ]
 
-        visible_calls = filter_calls(
+        visible_calls = filter_calls_by_extension(
             calls,
             manager_extension
         )
