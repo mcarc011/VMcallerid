@@ -358,6 +358,10 @@ def filter_calls_by_extension(
     if not extension_number:
         return []
 
+    # Fake extension that shows every active call
+    if extension_number.upper() == "ALL":
+        return calls
+
     visible = []
 
     for call in calls:
@@ -371,7 +375,6 @@ def filter_calls_by_extension(
         }
 
         if extension_number in call_extensions:
-
             visible.append(
                 call
             )
