@@ -592,12 +592,6 @@ def render_call(call):
         f"**{state}**"
     )
 
-    if extensions_text:
-
-        st.caption(
-            f"Extension(s): {extensions_text}"
-        )
-
     st.divider()
 
     # ========================================================
