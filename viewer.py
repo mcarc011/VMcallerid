@@ -701,51 +701,38 @@ def live_calls():
     # ========================================================
     # DYNAMIC CALL GRID
     # ========================================================
-
-    # Keep cards reasonably wide.
-    # 1 call  -> 1 column
-    # 2 calls -> 2 columns
-    # 3+      -> 3 columns
-
-    if len(visible_calls) == 1:
-        columns_per_row = 1
-
-    elif len(visible_calls) == 2:
-        columns_per_row = 2
-
-    else:
-        columns_per_row = 3
-
-    # Render ONLY existing calls
+    
+    columns_per_row = 3
+    
     for start in range(
         0,
         len(visible_calls),
         columns_per_row
     ):
-
+    
         row_calls = visible_calls[
             start:
             start + columns_per_row
         ]
-
+    
+        # Always create 3 columns so one call
+        # doesn't stretch across the screen.
         columns = st.columns(
-            len(row_calls)
+            columns_per_row
         )
-
-        for column, call in zip(
-            columns,
+    
+        for index, call in enumerate(
             row_calls
         ):
-
-            with column:
-
+    
+            with columns[index]:
+    
                 with st.container(
                     border=True
                 ):
-
+    
                     render_call(
                         call
                     )
-
 
 live_calls()
