@@ -556,6 +556,23 @@ if typed_extension:
     st.caption(
         f"Viewing Extension: {typed_extension}"
     )
+
+extension_numbers = call.get(
+    "extension_numbers",
+    []
+)
+
+if not extension_numbers:
+    extension_numbers = call.get(
+        "active_extension_ids",
+        []
+    )
+
+extension_text = ", ".join(
+    str(x)
+    for x in extension_numbers
+)
+
 def render_call(call):
 
     phone = call.get(
@@ -595,7 +612,12 @@ def render_call(call):
     st.markdown(
         f"**{state}**"
     )
-
+    
+    if extension_text:
+        st.caption(
+            f"Extension: {extension_text}"
+        )
+        
     st.divider()
 
     # ========================================================
