@@ -675,7 +675,7 @@ def live_calls():
 
         visible_calls = filter_calls_by_extension(
             calls,
-            selected_extension
+            typed_extension
         )
 
     # ========================================================
