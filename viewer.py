@@ -692,7 +692,7 @@ def render_call(call):
 # ============================================================
 # LIVE CALL AREA
 # ============================================================
-@st.fragment(run_every="1s")
+@st.fragment(run_every="2s")
 def live_calls():
 
     calls = load_calls()
