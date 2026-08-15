@@ -557,16 +557,6 @@ if typed_extension:
         f"Viewing Extension: {typed_extension}"
     )
 
-extension_numbers = call.get(
-    "extension_numbers",
-    []
-)
-
-if not extension_numbers:
-    extension_numbers = call.get(
-        "active_extension_ids",
-        []
-    )
 
 extension_text = ", ".join(
     str(x)
