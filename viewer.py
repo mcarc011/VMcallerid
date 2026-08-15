@@ -292,7 +292,7 @@ import requests
 def load_calls():
 
     url = (
-        st.secrets["CALLER_ID_API_BASE_URL"]
+        st.secrets["CALLER_ID_API_BASE_URL"].rstrip("/")
         + "/api/active-calls"
     )
 
@@ -304,38 +304,20 @@ def load_calls():
                 "X-API-Key":
                     st.secrets["CALLER_ID_API_KEY"]
             },
-            timeout=5
-        )
-
-        st.write(
-            "API status:",
-            response.status_code
-        )
-
-        st.write(
-            "Raw API response:",
-            response.text
+            timeout=3
         )
 
         response.raise_for_status()
 
-        data = response.json()
-
-        st.write(
-            "Parsed API data:",
-            data
-        )
-
-        return data
+        return response.json()
 
     except Exception as e:
 
         st.error(
-            f"Caller ID API error: {e}"
+            f"Caller ID server unavailable: {e}"
         )
 
         return []
-
 
 # ============================================================
 # FILTER BY USER EXTENSION
