@@ -287,27 +287,35 @@ def extension_name(
 # LOAD CALL DATA
 # ============================================================
 
+import requests
+
+
 def load_calls():
-
-    if not os.path.exists(
-        ACTIVE_CALLS_FILE
-    ):
-
-        return []
 
     try:
 
-        with open(
-            ACTIVE_CALLS_FILE,
-            "r",
-            encoding="utf-8"
-        ) as f:
+        response = requests.get(
+            st.secrets[
+                "CALLER_ID_API_URL"
+            ],
+            headers={
+                "X-API-Key":
+                    st.secrets[
+                        "CALLER_ID_API_KEY"
+                    ]
+            },
+            timeout=3
+        )
 
-            return json.load(
-                f
-            )
+        response.raise_for_status()
 
-    except Exception:
+        return response.json()
+
+    except Exception as e:
+
+        st.error(
+            f"Caller ID server unavailable: {e}"
+        )
 
         return []
 
