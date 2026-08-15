@@ -392,162 +392,6 @@ def filter_calls_by_extension(
 
     return visible
 
-# ============================================================
-# TABS
-# ============================================================
-
-tab1, tab2 = st.tabs([
-    "My Extension",
-    "All Active Calls"
-])
-
-
-# ============================================================
-# TAB 1 — EXISTING EXTENSION VIEW
-# ============================================================
-
-with tab1:
-
-    # Keep your existing extension selector here
-    # and your existing live_calls() rendering logic.
-
-    st.markdown(
-        f"""
-        <div style="
-            margin-top:10px;
-            margin-bottom:20px;
-            color:#aeb4bd;
-        ">
-            Viewing Extension:
-            <strong>{typed_extension}</strong>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    live_calls()
-
-
-# ============================================================
-# TAB 2 — ALL ACTIVE CALLS
-# ============================================================
-
-with tab2:
-
-    @st.fragment(run_every="2s")
-    def all_active_calls_view():
-
-        calls = load_calls()
-
-        if not calls:
-
-            st.info(
-                "No active calls."
-            )
-
-            return
-
-        st.subheader(
-            f"All Active Calls — {len(calls)}"
-        )
-
-        rows = []
-
-        for call in calls:
-
-            phone = call.get(
-                "phone",
-                ""
-            )
-
-            # -----------------------------------------------
-            # PATIENT NAME
-            # -----------------------------------------------
-
-            patients = call.get(
-                "patients",
-                []
-            )
-
-            if patients:
-
-                patient_names = ", ".join(
-                    patient.get(
-                        "name",
-                        ""
-                    )
-                    for patient in patients
-                    if patient.get(
-                        "name"
-                    )
-                )
-
-            else:
-
-                lookup_status = call.get(
-                    "patient_lookup_status"
-                )
-
-                if lookup_status == "loading":
-
-                    patient_names = (
-                        "Looking up..."
-                    )
-
-                elif lookup_status == "error":
-
-                    patient_names = (
-                        "Lookup error"
-                    )
-
-                else:
-
-                    patient_names = (
-                        "Unknown caller"
-                    )
-
-            # -----------------------------------------------
-            # EXTENSIONS
-            # -----------------------------------------------
-
-            extension_numbers = call.get(
-                "extension_numbers",
-                []
-            )
-
-            # Fallback to IDs if extension numbers have not
-            # been added to the server yet.
-            if extension_numbers:
-
-                extensions = ", ".join(
-                    str(x)
-                    for x in extension_numbers
-                )
-
-            else:
-
-                extensions = ", ".join(
-                    str(x)
-                    for x in call.get(
-                        "active_extension_ids",
-                        []
-                    )
-                )
-
-            rows.append({
-                "Phone": phone,
-                "Patient": patient_names,
-                "Ext": extensions
-            })
-
-        st.dataframe(
-            rows,
-            use_container_width=True,
-            hide_index=True
-        )
-
-
-    all_active_calls_view()
     
 # ============================================================
 # HEADER
@@ -990,4 +834,160 @@ def live_calls():
                         call
                     )
 
+# ============================================================
+# TABS
+# ============================================================
+
+tab1, tab2 = st.tabs([
+    "My Extension",
+    "All Active Calls"
+])
+
+
+# ============================================================
+# TAB 1 — EXISTING EXTENSION VIEW
+# ============================================================
+
+with tab1:
+
+    # Keep your existing extension selector here
+    # and your existing live_calls() rendering logic.
+
+    st.markdown(
+        f"""
+        <div style="
+            margin-top:10px;
+            margin-bottom:20px;
+            color:#aeb4bd;
+        ">
+            Viewing Extension:
+            <strong>{typed_extension}</strong>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    live_calls()
+
+
+# ============================================================
+# TAB 2 — ALL ACTIVE CALLS
+# ============================================================
+
+with tab2:
+
+    @st.fragment(run_every="2s")
+    def all_active_calls_view():
+
+        calls = load_calls()
+
+        if not calls:
+
+            st.info(
+                "No active calls."
+            )
+
+            return
+
+        st.subheader(
+            f"All Active Calls — {len(calls)}"
+        )
+
+        rows = []
+
+        for call in calls:
+
+            phone = call.get(
+                "phone",
+                ""
+            )
+
+            # -----------------------------------------------
+            # PATIENT NAME
+            # -----------------------------------------------
+
+            patients = call.get(
+                "patients",
+                []
+            )
+
+            if patients:
+
+                patient_names = ", ".join(
+                    patient.get(
+                        "name",
+                        ""
+                    )
+                    for patient in patients
+                    if patient.get(
+                        "name"
+                    )
+                )
+
+            else:
+
+                lookup_status = call.get(
+                    "patient_lookup_status"
+                )
+
+                if lookup_status == "loading":
+
+                    patient_names = (
+                        "Looking up..."
+                    )
+
+                elif lookup_status == "error":
+
+                    patient_names = (
+                        "Lookup error"
+                    )
+
+                else:
+
+                    patient_names = (
+                        "Unknown caller"
+                    )
+
+            # -----------------------------------------------
+            # EXTENSIONS
+            # -----------------------------------------------
+
+            extension_numbers = call.get(
+                "extension_numbers",
+                []
+            )
+
+            # Fallback to IDs if extension numbers have not
+            # been added to the server yet.
+            if extension_numbers:
+
+                extensions = ", ".join(
+                    str(x)
+                    for x in extension_numbers
+                )
+
+            else:
+
+                extensions = ", ".join(
+                    str(x)
+                    for x in call.get(
+                        "active_extension_ids",
+                        []
+                    )
+                )
+
+            rows.append({
+                "Phone": phone,
+                "Patient": patient_names,
+                "Ext": extensions
+            })
+
+        st.dataframe(
+            rows,
+            use_container_width=True,
+            hide_index=True
+        )
+
+
+    all_active_calls_view()
 live_calls()
