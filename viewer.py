@@ -372,16 +372,35 @@ header_left, header_right = st.columns(
 
 with header_left:
 
-    st.title(
-        "Vision Unlimited Caller ID"
+    st.markdown(
+        "<h1 style='margin-bottom:0;'>Vision Unlimited Caller ID</h1>",
+        unsafe_allow_html=True
     )
-
 
 with header_right:
 
-    st.success(
-        "● Connected"
+    st.markdown(
+        """
+        <div style="
+            background:#143d2c;
+            color:#4df58a;
+            padding:10px 18px;
+            border-radius:10px;
+            text-align:center;
+            font-weight:600;
+            margin-top:8px;
+        ">
+            ● Connected
+        </div>
+        """,
+        unsafe_allow_html=True
     )
+
+
+st.markdown(
+    "<hr style='border:none;border-top:1px solid #2a2f38;margin-top:12px;margin-bottom:28px;'>",
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
@@ -393,24 +412,97 @@ default_extension = ""
 if allowed_extensions and "*" not in allowed_extensions:
     default_extension = allowed_extensions[0]
 
-left, middle, right = st.columns(
-    [1, 1.2, 4]
+
+# Push controls to the right
+spacer, label_col, input_col, button_col = st.columns(
+    [4.5, 1.1, 2.3, 0.9]
 )
 
-with middle:
 
-    typed_extension = st.text_input(
+with label_col:
+
+    st.markdown(
+        """
+        <div style="
+            padding-top:34px;
+            text-align:right;
+            font-weight:700;
+            font-size:16px;
+        ">
+            Extension ID
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+with input_col:
+
+    typed_extension_input = st.text_input(
         "Extension ID",
         value=st.session_state.get(
             "typed_extension",
             default_extension
         ),
-        placeholder="Extension ID"
+        label_visibility="collapsed",
+        key="extension_input"
     )
 
-typed_extension = typed_extension.strip()
 
-st.session_state["typed_extension"] = typed_extension
+with button_col:
+
+    st.markdown(
+        "<div style='height:27px;'></div>",
+        unsafe_allow_html=True
+    )
+
+    apply_extension = st.button(
+        "↻ Apply",
+        use_container_width=True
+    )
+
+
+# ============================================================
+# APPLY EXTENSION
+# ============================================================
+
+if "typed_extension" not in st.session_state:
+
+    st.session_state["typed_extension"] = (
+        default_extension
+    )
+
+
+if apply_extension:
+
+    st.session_state["typed_extension"] = (
+        typed_extension_input.strip()
+    )
+
+
+typed_extension = st.session_state[
+    "typed_extension"
+]
+
+
+# ============================================================
+# CURRENT EXTENSION DISPLAY
+# ============================================================
+
+st.markdown(
+    f"""
+    <div style="
+        margin-top:22px;
+        margin-bottom:22px;
+        color:#aeb4bd;
+        font-size:15px;
+    ">
+        Viewing RingCentral Extension ID:
+        <strong>{typed_extension}</strong>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
