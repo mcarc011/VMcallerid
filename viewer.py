@@ -57,6 +57,13 @@ st.markdown(
         font-size: 16px;
         margin: 0;
     }
+    
+    /* Active call cards */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #161b26;
+        border: 1px solid #30394a !important;
+        border-radius: 12px;
+    }
 
     </style>
     """,
