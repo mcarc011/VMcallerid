@@ -137,24 +137,12 @@ def login_screen():
     with center:
 
         st.markdown(
-            """
-            <div style="
-                text-align: center;
-                margin-top: 80px;
-                margin-bottom: 25px;
-            ">
-                <h2 style="margin-bottom: 5px;">
-                    Vision Unlimited
-                </h2>
-
-                <p style="
-                    color: #777;
-                    margin-top: 0;
-                ">
-                    Caller ID
-                </p>
-            </div>
-            """,
+            "<h2 style='text-align:center; margin-bottom:0;'>Vision Unlimited</h2>",
+            unsafe_allow_html=True
+        )
+        
+        st.markdown(
+            "<p style='text-align:center; color:#777; margin-top:4px;'>Caller ID</p>",
             unsafe_allow_html=True
         )
 
