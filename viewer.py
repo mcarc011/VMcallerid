@@ -673,7 +673,7 @@ def live_calls():
 
     else:
 
-        visible_calls = filter_calls_by_extensions(
+        visible_calls = filter_calls_by_extension(
             calls,
             selected_extension
         )
