@@ -618,15 +618,15 @@ def render_call(
 # ============================================================
 # LIVE CALL AREA
 # ============================================================
-
-@st.fragment(
-    run_every="1s"
-)
+@st.fragment(run_every="1s")
 def live_calls():
 
     calls = load_calls()
 
-    # Manager can optionally inspect one extension.
+    # ========================================================
+    # FILTER CALLS
+    # ========================================================
+
     if "*" in allowed_extensions:
 
         all_extensions = set()
@@ -637,7 +637,6 @@ def live_calls():
                 "active_extension_ids",
                 []
             ):
-
                 all_extensions.add(
                     str(extension_id)
                 )
@@ -649,26 +648,19 @@ def live_calls():
         for extension_id in sorted(
             all_extensions
         ):
-
             manager_options[
-                extension_name(
-                    extension_id
-                )
+                extension_name(extension_id)
             ] = extension_id
 
         selected_label = st.selectbox(
             "Filter by extension",
-            list(
-                manager_options.keys()
-            ),
+            list(manager_options.keys()),
             key="manager_extension_filter"
         )
 
-        manager_extension = (
-            manager_options[
-                selected_label
-            ]
-        )
+        manager_extension = manager_options[
+            selected_label
+        ]
 
         visible_calls = filter_calls(
             calls,
@@ -682,60 +674,78 @@ def live_calls():
             selected_extension
         )
 
-    st.subheader(
-        f"Active Calls — {len(visible_calls)}"
-    )
-
     # ========================================================
-    # 8 CALL SLOTS
+    # HEADER
     # ========================================================
 
-    for start in range(
-        0,
-        8,
-        4
-    ):
+    if len(visible_calls) == 0:
 
-        columns = st.columns(
-            4
+        st.info(
+            "No active calls."
         )
 
-        for offset in range(
-            4
+        return
+
+    if len(visible_calls) == 1:
+
+        st.subheader(
+            "1 Active Call"
+        )
+
+    else:
+
+        st.subheader(
+            f"{len(visible_calls)} Active Calls"
+        )
+
+    # ========================================================
+    # DYNAMIC CALL GRID
+    # ========================================================
+
+    # Keep cards reasonably wide.
+    # 1 call  -> 1 column
+    # 2 calls -> 2 columns
+    # 3+      -> 3 columns
+
+    if len(visible_calls) == 1:
+        columns_per_row = 1
+
+    elif len(visible_calls) == 2:
+        columns_per_row = 2
+
+    else:
+        columns_per_row = 3
+
+    # Render ONLY existing calls
+    for start in range(
+        0,
+        len(visible_calls),
+        columns_per_row
+    ):
+
+        row_calls = visible_calls[
+            start:
+            start + columns_per_row
+        ]
+
+        columns = st.columns(
+            len(row_calls)
+        )
+
+        for column, call in zip(
+            columns,
+            row_calls
         ):
 
-            slot = (
-                start
-                + offset
-            )
-
-            with columns[
-                offset
-            ]:
+            with column:
 
                 with st.container(
                     border=True
                 ):
 
-                    if slot < len(
-                        visible_calls
-                    ):
-
-                        render_call(
-                            visible_calls[
-                                slot
-                            ]
-                        )
-
-                    else:
-
-                        st.markdown(
-                            "### Available"
-                        )
-
-                        st.caption(
-                            "Waiting for incoming call"
-                        )
+                    render_call(
+                        call
+                    )
 
 
 live_calls()
