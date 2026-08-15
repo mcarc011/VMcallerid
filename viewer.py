@@ -311,14 +311,14 @@ def load_calls():
 
 def filter_calls_by_extension(
     calls,
-    extension_id
+    extension_number
 ):
 
-    extension_id = str(
-        extension_id
+    extension_number = str(
+        extension_number
     ).strip()
 
-    if not extension_id:
+    if not extension_number:
         return []
 
     visible = []
@@ -328,16 +328,18 @@ def filter_calls_by_extension(
         call_extensions = {
             str(x).strip()
             for x in call.get(
-                "active_extension_ids",
+                "extension_numbers",
                 []
             )
         }
 
-        if extension_id in call_extensions:
-            visible.append(call)
+        if extension_number in call_extensions:
+
+            visible.append(
+                call
+            )
 
     return visible
-
 
 # ============================================================
 # HEADER
@@ -404,7 +406,7 @@ with label_col:
             font-weight:700;
             font-size:16px;
         ">
-            Extension ID
+            Extension
         </div>
         """,
         unsafe_allow_html=True
@@ -414,7 +416,7 @@ with label_col:
 with input_col:
 
     typed_extension_input = st.text_input(
-        "Extension ID",
+        "Extension",
         value=st.session_state.get(
             "typed_extension",
             default_extension
@@ -512,7 +514,7 @@ def readable_datetime(value):
 # ============================================================
 if typed_extension:
     st.caption(
-        f"Viewing RingCentral Extension ID: {typed_extension}"
+        f"Viewing Extension: {typed_extension}"
     )
 def render_call(call):
 
