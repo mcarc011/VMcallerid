@@ -405,48 +405,26 @@ with header_right:
 
 
 # ============================================================
-# SHOW OPERATOR'S EXTENSION
+# EXTENSION SELECTOR
 # ============================================================
 
-selected_extension = None
+default_extension = ""
 
+if allowed_extensions and "*" not in allowed_extensions:
+    default_extension = allowed_extensions[0]
 
-if "*" not in allowed_extensions:
+typed_extension = st.text_input(
+    "Extension ID",
+    value=st.session_state.get(
+        "typed_extension",
+        default_extension
+    ),
+    placeholder="Enter RingCentral extension ID"
+)
 
-    extension_labels = [
+typed_extension = typed_extension.strip()
 
-        extension_name(x)
-        for x in allowed_extensions
-    ]
-
-    if len(extension_labels) == 1:
-
-        st.caption(
-            f"Viewing: {extension_labels[0]}"
-        )
-
-    else:
-
-        options = {
-            extension_name(x): x
-            for x in allowed_extensions
-        }
-
-        selected_label = st.selectbox(
-            "Extension",
-            list(options.keys())
-        )
-
-        selected_extension = options[
-            selected_label
-        ]
-
-
-else:
-
-    st.caption(
-        "Manager view — all extensions"
-    )
+st.session_state["typed_extension"] = typed_extension
 
 
 # ============================================================
