@@ -332,54 +332,34 @@ def load_calls():
 # FILTER BY USER EXTENSION
 # ============================================================
 
-def filter_calls(
+def filter_calls_by_extension(
     calls,
-    selected_extension=None
+    extension_id
 ):
 
-    # Manager / all-extension permission
-    if "*" in allowed_extensions:
+    extension_id = str(
+        extension_id
+    ).strip()
 
-        if selected_extension:
+    if not extension_id:
+        return []
 
-            return [
+    visible = []
 
-                call
-                for call in calls
+    for call in calls:
 
-                if selected_extension
-                in [
-                    str(x)
-                    for x in call.get(
-                        "active_extension_ids",
-                        []
-                    )
-                ]
-            ]
+        call_extensions = {
+            str(x).strip()
+            for x in call.get(
+                "active_extension_ids",
+                []
+            )
+        }
 
-        return calls
+        if extension_id in call_extensions:
+            visible.append(call)
 
-    # Operator
-    return [
-
-        call
-        for call in calls
-
-        if any(
-
-            allowed
-            in [
-                str(x)
-                for x in call.get(
-                    "active_extension_ids",
-                    []
-                )
-            ]
-
-            for allowed
-            in allowed_extensions
-        )
-    ]
+    return visible
 
 
 # ============================================================
@@ -482,7 +462,10 @@ def readable_datetime(value):
 # ============================================================
 # RENDER ONE CALL CARD
 # ============================================================
-
+if typed_extension:
+    st.caption(
+        f"Viewing RingCentral Extension ID: {typed_extension}"
+    )
 def render_call(call):
 
     phone = call.get(
@@ -632,6 +615,11 @@ def render_call(call):
 def live_calls():
 
     calls = load_calls()
+
+    visible_calls = filter_calls_by_extension(
+        calls,
+        typed_extension
+    )
 
     # ========================================================
     # FILTER CALLS
