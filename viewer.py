@@ -219,6 +219,20 @@ role = user.get(
     "operator"
 )
 
+# ============================================================
+# CURRENT EXTENSION
+# ============================================================
+
+default_extension = ""
+
+if allowed_extensions and "*" not in allowed_extensions:
+    default_extension = str(allowed_extensions[0])
+
+if "typed_extension" not in st.session_state:
+    st.session_state["typed_extension"] = default_extension
+
+typed_extension = st.session_state["typed_extension"]
+
 
 # ============================================================
 # SIDEBAR
@@ -611,14 +625,19 @@ with input_col:
 
     typed_extension_input = st.text_input(
         "Extension",
-        value=st.session_state.get(
-            "typed_extension",
-            default_extension
-        ),
+        value=typed_extension,
         label_visibility="collapsed",
         key="extension_input"
     )
-
+    
+    if apply_extension:
+        st.session_state["typed_extension"] = (
+            typed_extension_input.strip()
+        )
+    
+        typed_extension = st.session_state[
+            "typed_extension"
+        ]
 
 with button_col:
 
