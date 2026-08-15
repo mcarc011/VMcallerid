@@ -595,15 +595,32 @@ def render_call(call):
         "complete"
     )
 
-    extension_ids = call.get(
-        "active_extension_ids",
+    # ========================================================
+    # EXTENSION INFO
+    # ========================================================
+
+    extension_numbers = call.get(
+        "extension_numbers",
         []
     )
 
-    extensions_text = ", ".join(
-        extension_name(x)
-        for x in extension_ids
+    # Fallback to RingCentral internal IDs
+    # if extension numbers aren't available yet.
+    if not extension_numbers:
+
+        extension_numbers = call.get(
+            "active_extension_ids",
+            []
+        )
+
+    extension_text = ", ".join(
+        str(x)
+        for x in extension_numbers
     )
+
+    # ========================================================
+    # CALL HEADER
+    # ========================================================
 
     st.markdown(
         f"### ☎ {phone}"
@@ -612,16 +629,17 @@ def render_call(call):
     st.markdown(
         f"**{state}**"
     )
-    
+
     if extension_text:
-        st.caption(
-            f"Extension: {extension_text}"
+
+        st.markdown(
+            f"**Extension:** {extension_text}"
         )
-        
+
     st.divider()
 
     # ========================================================
-    # PATIENT LOOKUP STILL RUNNING
+    # PATIENT LOOKUP STATUS
     # ========================================================
 
     if lookup_status == "loading":
@@ -632,10 +650,6 @@ def render_call(call):
 
         return
 
-    # ========================================================
-    # DATABASE LOOKUP ERROR
-    # ========================================================
-
     if lookup_status == "error":
 
         st.error(
@@ -643,10 +657,6 @@ def render_call(call):
         )
 
         return
-
-    # ========================================================
-    # LOOKUP FINISHED BUT NO MATCH
-    # ========================================================
 
     if not patients:
 
@@ -657,7 +667,7 @@ def render_call(call):
         return
 
     # ========================================================
-    # PATIENT MATCHES
+    # PATIENTS
     # ========================================================
 
     for index, patient in enumerate(
@@ -713,6 +723,7 @@ def render_call(call):
             st.write(
                 f"**Active Order:** {order}"
             )
+            
             
 # ============================================================
 # LIVE CALL AREA
