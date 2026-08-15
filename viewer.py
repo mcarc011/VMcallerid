@@ -286,67 +286,61 @@ import streamlit as st
 
 def load_calls():
 
+    base_url = str(
+        st.secrets["CALLER_ID_API_BASE_URL"]
+    ).strip()
+
+    base_url = base_url.replace(
+        "%20",
+        ""
+    )
+
+    base_url = base_url.rstrip("/")
+
     url = (
-        st.secrets["CALLER_ID_API_BASE_URL"].rstrip("/")
+        base_url
         + "/api/active-calls"
     )
 
-    headers = {
-        "X-API-Key":
-            st.secrets["CALLER_ID_API_KEY"]
-    }
+    try:
 
-    # Try a few times because ngrok can occasionally
-    # drop an HTTPS connection.
-    for attempt in range(3):
+        response = requests.get(
+            url,
+            headers={
+                "X-API-Key":
+                    str(
+                        st.secrets[
+                            "CALLER_ID_API_KEY"
+                        ]
+                    ).strip()
+            },
+            timeout=2
+        )
 
-        try:
+        response.raise_for_status()
 
-            response = requests.get(
-                url,
-                headers=headers,
-                timeout=5
-            )
+        data = response.json()
 
-            response.raise_for_status()
+        # Save last successful result
+        st.session_state[
+            "last_good_calls"
+        ] = data
 
-            return response.json()
+        return data
 
-        except (
-            requests.exceptions.SSLError,
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout
-        ) as e:
+    except Exception as e:
 
-            if attempt < 2:
-                time.sleep(0.5)
-                continue
+        print(
+            "Caller ID API connection error:",
+            e
+        )
 
-            # Don't crash the dashboard for a transient
-            # network failure.
-            print(
-                "Caller ID API temporary network error:",
-                e
-            )
-
-            return []
-
-        except requests.exceptions.HTTPError as e:
-
-            st.error(
-                f"Caller ID server returned an HTTP error: {e}"
-            )
-
-            return []
-
-        except Exception as e:
-
-            print(
-                "Caller ID API error:",
-                e
-            )
-
-            return []
+        # Keep displaying the last known state
+        # instead of clearing the screen.
+        return st.session_state.get(
+            "last_good_calls",
+            []
+        )
 
 # ============================================================
 # FILTER BY USER EXTENSION
