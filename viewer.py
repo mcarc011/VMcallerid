@@ -289,32 +289,49 @@ def extension_name(
 
 import requests
 
-
 def load_calls():
+
+    url = (
+        st.secrets["CALLER_ID_API_BASE_URL"]
+        + "/api/active-calls"
+    )
 
     try:
 
         response = requests.get(
-            st.secrets[
-                "CALLER_ID_API_URL"
-            ],
+            url,
             headers={
                 "X-API-Key":
-                    st.secrets[
-                        "CALLER_ID_API_KEY"
-                    ]
+                    st.secrets["CALLER_ID_API_KEY"]
             },
-            timeout=3
+            timeout=5
+        )
+
+        st.write(
+            "API status:",
+            response.status_code
+        )
+
+        st.write(
+            "Raw API response:",
+            response.text
         )
 
         response.raise_for_status()
 
-        return response.json()
+        data = response.json()
+
+        st.write(
+            "Parsed API data:",
+            data
+        )
+
+        return data
 
     except Exception as e:
 
         st.error(
-            f"Caller ID server unavailable: {e}"
+            f"Caller ID API error: {e}"
         )
 
         return []
