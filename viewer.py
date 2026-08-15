@@ -33,27 +33,29 @@ st.markdown(
     """
     <style>
 
-    .block-container {
-        padding-top: 1.1rem;
-        padding-left: 1.4rem;
-        padding-right: 1.4rem;
-        max-width: 100%;
-    }
-
-    /* Extension input styling */
+    /* Input */
     div[data-testid="stTextInput"] input {
         height: 48px;
+        min-height: 48px;
         border-radius: 10px;
         font-size: 16px;
         font-weight: 600;
     }
 
-    /* Button styling */
+    /* Remove extra spacing around input */
+    div[data-testid="stTextInput"] {
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Button */
     div[data-testid="stButton"] button {
         height: 48px;
+        min-height: 48px;
         border-radius: 10px;
         font-weight: 700;
         font-size: 16px;
+        margin: 0;
     }
 
     </style>
@@ -377,7 +379,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
 # ============================================================
 # EXTENSION SELECTOR
 # ============================================================
@@ -388,9 +389,9 @@ if allowed_extensions and "*" not in allowed_extensions:
     default_extension = allowed_extensions[0]
 
 
-# Push controls to the right
 spacer, label_col, input_col, button_col = st.columns(
-    [4.5, 1.1, 2.3, 0.9]
+    [5.2, 1.1, 2.0, 0.9],
+    vertical_alignment="center"
 )
 
 
@@ -399,7 +400,6 @@ with label_col:
     st.markdown(
         """
         <div style="
-            padding-top:34px;
             text-align:right;
             font-weight:700;
             font-size:16px;
@@ -425,11 +425,6 @@ with input_col:
 
 
 with button_col:
-
-    st.markdown(
-        "<div style='height:27px;'></div>",
-        unsafe_allow_html=True
-    )
 
     apply_extension = st.button(
         "↻ Apply",
