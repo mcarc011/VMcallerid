@@ -8,7 +8,6 @@ import streamlit as st
 # ============================================================
 # CONFIG
 # ============================================================
-
 st.set_page_config(
     page_title="Vision Unlimited Caller ID",
     page_icon="☎️",
@@ -30,55 +29,31 @@ ACTIVE_CALLS_FILE = os.path.join(
 # ============================================================
 # STYLE
 # ============================================================
-
 st.markdown(
     """
     <style>
 
     .block-container {
-        padding-top: 1.4rem;
-        padding-bottom: 2rem;
-        max-width: 1800px;
+        padding-top: 1.1rem;
+        padding-left: 1.4rem;
+        padding-right: 1.4rem;
+        max-width: 100%;
     }
 
-    .call-card {
-        border: 1px solid #d7dce2;
-        border-radius: 12px;
-        padding: 16px;
-        min-height: 320px;
-        background: white;
-        margin-bottom: 12px;
-    }
-
-    .call-phone {
-        font-size: 1.45rem;
-        font-weight: 700;
-        margin-bottom: 2px;
-    }
-
-    .call-state {
-        font-size: .9rem;
+    /* Extension input styling */
+    div[data-testid="stTextInput"] input {
+        height: 48px;
+        border-radius: 10px;
+        font-size: 16px;
         font-weight: 600;
-        margin-bottom: 12px;
     }
 
-    .patient-name {
-        font-size: 1.05rem;
+    /* Button styling */
+    div[data-testid="stButton"] button {
+        height: 48px;
+        border-radius: 10px;
         font-weight: 700;
-        margin-top: 8px;
-    }
-
-    .patient-info {
-        font-size: .90rem;
-        line-height: 1.55;
-    }
-
-    .empty-card {
-        border: 1px dashed #c7ccd2;
-        border-radius: 12px;
-        padding: 16px;
-        min-height: 320px;
-        opacity: .65;
+        font-size: 16px;
     }
 
     </style>
