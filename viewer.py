@@ -456,26 +456,6 @@ typed_extension = st.session_state[
 
 
 # ============================================================
-# CURRENT EXTENSION DISPLAY
-# ============================================================
-
-st.markdown(
-    f"""
-    <div style="
-        margin-top:22px;
-        margin-bottom:22px;
-        color:#aeb4bd;
-        font-size:15px;
-    ">
-        Viewing RingCentral Extension ID:
-        <strong>{typed_extension}</strong>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# ============================================================
 # FORMAT HELPERS
 # ============================================================
 
