@@ -129,60 +129,81 @@ def authenticate(username, password):
 
 def login_screen():
 
-    st.title(
-        "Vision Unlimited Caller ID"
+    # Center the login form
+    left, center, right = st.columns(
+        [1.5, 1, 1.5]
     )
 
-    st.caption(
-        "Authorized staff only"
-    )
+    with center:
 
-    with st.form(
-        "login_form"
-    ):
+        st.markdown(
+            """
+            <div style="
+                text-align: center;
+                margin-top: 80px;
+                margin-bottom: 25px;
+            ">
+                <h2 style="margin-bottom: 5px;">
+                    Vision Unlimited
+                </h2>
 
-        username = st.text_input(
-            "Username"
+                <p style="
+                    color: #777;
+                    margin-top: 0;
+                ">
+                    Caller ID
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-        password = st.text_input(
-            "Password",
-            type="password"
-        )
-
-        submitted = st.form_submit_button(
-            "Sign in",
-            use_container_width=True
-        )
-
-    if submitted:
-
-        username = (
-            username
-            .strip()
-            .lower()
-        )
-
-        if authenticate(
-            username,
-            password
+        with st.form(
+            "login_form"
         ):
 
-            st.session_state[
-                "authenticated"
-            ] = True
-
-            st.session_state[
-                "username"
-            ] = username
-
-            st.rerun()
-
-        else:
-
-            st.error(
-                "Invalid username or password."
+            username = st.text_input(
+                "Username"
             )
+
+            password = st.text_input(
+                "Password",
+                type="password"
+            )
+
+            submitted = st.form_submit_button(
+                "Sign in",
+                use_container_width=True
+            )
+
+        if submitted:
+
+            username = (
+                username
+                .strip()
+                .lower()
+            )
+
+            if authenticate(
+                username,
+                password
+            ):
+
+                st.session_state[
+                    "authenticated"
+                ] = True
+
+                st.session_state[
+                    "username"
+                ] = username
+
+                st.rerun()
+
+            else:
+
+                st.error(
+                    "Invalid username or password."
+                )
 
 
 # ============================================================
