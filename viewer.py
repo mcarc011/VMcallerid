@@ -505,9 +505,7 @@ def readable_datetime(value):
 # RENDER ONE CALL CARD
 # ============================================================
 
-def render_call(
-    call
-):
+def render_call(call):
 
     phone = call.get(
         "phone",
@@ -524,16 +522,19 @@ def render_call(
         []
     )
 
+    lookup_status = call.get(
+        "patient_lookup_status",
+        "complete"
+    )
+
     extension_ids = call.get(
         "active_extension_ids",
         []
     )
 
     extensions_text = ", ".join(
-
         extension_name(x)
         for x in extension_ids
-
     )
 
     st.markdown(
@@ -552,6 +553,34 @@ def render_call(
 
     st.divider()
 
+    # ========================================================
+    # PATIENT LOOKUP STILL RUNNING
+    # ========================================================
+
+    if lookup_status == "loading":
+
+        st.info(
+            "Looking up patient..."
+        )
+
+        return
+
+    # ========================================================
+    # DATABASE LOOKUP ERROR
+    # ========================================================
+
+    if lookup_status == "error":
+
+        st.error(
+            "Patient lookup failed."
+        )
+
+        return
+
+    # ========================================================
+    # LOOKUP FINISHED BUT NO MATCH
+    # ========================================================
+
     if not patients:
 
         st.warning(
@@ -559,6 +588,10 @@ def render_call(
         )
 
         return
+
+    # ========================================================
+    # PATIENT MATCHES
+    # ========================================================
 
     for index, patient in enumerate(
         patients
@@ -613,8 +646,7 @@ def render_call(
             st.write(
                 f"**Active Order:** {order}"
             )
-
-
+            
 # ============================================================
 # LIVE CALL AREA
 # ============================================================
