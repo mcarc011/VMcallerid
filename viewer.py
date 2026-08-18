@@ -636,10 +636,16 @@ def render_call(call):
         []
     )
 
-    extensions_text = ", ".join(
-        extension_name(x)
-        for x in extension_ids
-    )
+    # Full chronological path the call has traveled through.
+    # This is the same field used by the missed-call cards.
+    extension_numbers = [
+        str(x).strip()
+        for x in call.get(
+            "extension_numbers",
+            []
+        )
+        if str(x).strip()
+    ]
 
     st.markdown(
         f"### ☎ {phone}"
@@ -648,6 +654,24 @@ def render_call(call):
     st.markdown(
         f"**{state}**"
     )
+
+    if extension_numbers:
+        st.write(
+            "**Extension path:** "
+            + " → ".join(
+                extension_numbers
+            )
+        )
+    elif extension_ids:
+        # Fallback in case the server has not populated
+        # extension_numbers yet.
+        st.write(
+            "**Current extension:** "
+            + ", ".join(
+                extension_name(x)
+                for x in extension_ids
+            )
+        )
 
     st.divider()
 
