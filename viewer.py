@@ -342,6 +342,59 @@ def load_calls():
             []
         )
 
+def load_missed_calls():
+
+    base_url = str(
+        st.secrets["CALLER_ID_API_BASE_URL"]
+    ).strip()
+
+    base_url = base_url.replace(
+        "%20",
+        ""
+    )
+
+    base_url = base_url.rstrip("/")
+
+    url = (
+        base_url
+        + "/api/missed-calls"
+    )
+
+    try:
+        response = requests.get(
+            url,
+            headers={
+                "X-API-Key":
+                    str(
+                        st.secrets[
+                            "CALLER_ID_API_KEY"
+                        ]
+                    ).strip()
+            },
+            timeout=2
+        )
+
+        response.raise_for_status()
+        data = response.json()
+
+        st.session_state[
+            "last_good_missed_calls"
+        ] = data
+
+        return data
+
+    except Exception as e:
+        print(
+            "Missed call API connection error:",
+            e
+        )
+
+        return st.session_state.get(
+            "last_good_missed_calls",
+            []
+        )
+
+
 # ============================================================
 # FILTER BY USER EXTENSION
 # ============================================================
@@ -698,9 +751,185 @@ def render_call(call):
         if order:
 
             st.write(
-                f"**Active Order:** {order}"
+                f"**Active Optical Order:** {order}"
+            )
+
+        cl_order = patient.get(
+            "cl_flowstatus"
+        )
+
+        if cl_order:
+
+            st.write(
+                f"**Contact Lens Order:** {cl_order}"
             )
             
+# ============================================================
+# RENDER ONE MISSED CALL CARD
+# ============================================================
+
+def render_missed_call(call):
+
+    phone = call.get(
+        "phone",
+        "Unknown"
+    )
+
+    missed_at = readable_datetime(
+        call.get(
+            "missed_at"
+        )
+    )
+
+    duration = call.get(
+        "duration_seconds",
+        0
+    )
+
+    extension_numbers = [
+        str(x)
+        for x in call.get(
+            "extension_numbers",
+            []
+        )
+    ]
+
+    patients = call.get(
+        "patients",
+        []
+    )
+
+    lookup_status = call.get(
+        "patient_lookup_status",
+        "complete"
+    )
+
+    attempts = int(
+        call.get(
+            "attempts",
+            1
+        )
+        or 1
+    )
+
+    st.markdown(
+        f"### ☎ {phone}"
+    )
+
+    st.write(
+        f"**Missed:** {missed_at}"
+    )
+
+    st.write(
+        f"**Duration:** {duration} sec"
+    )
+
+    if attempts > 1:
+        st.write(
+            f"**Missed attempts:** {attempts}"
+        )
+
+    if extension_numbers:
+        st.write(
+            "**Extension path:** "
+            + " → ".join(
+                extension_numbers
+            )
+        )
+
+    st.divider()
+
+    if lookup_status == "loading":
+        st.info(
+            "Looking up patient..."
+        )
+        return
+
+    if lookup_status == "error":
+        st.error(
+            "Patient lookup failed."
+        )
+        return
+
+    if not patients:
+        st.warning(
+            "Phone number not found in patient database."
+        )
+        return
+
+    for index, patient in enumerate(
+        patients
+    ):
+        if index > 0:
+            st.divider()
+
+        st.markdown(
+            f"#### {patient.get('name', 'Unknown')}"
+        )
+
+        st.write(
+            f"**Patient #:** "
+            f"{patient.get('patient_no', '')}"
+        )
+
+        st.write(
+            "**DOB:** "
+            + readable_date(
+                patient.get(
+                    "dob"
+                )
+            )
+        )
+
+        st.write(
+            "**Last Visit:** "
+            + readable_date(
+                patient.get(
+                    "last_visit"
+                )
+            )
+        )
+
+        next_appointment = patient.get(
+            "next_appointment"
+        )
+
+        if next_appointment:
+            st.write(
+                "**Next Appointment:** "
+                + readable_datetime(
+                    next_appointment
+                )
+            )
+
+        location = patient.get(
+            "location"
+        )
+
+        if location:
+            st.write(
+                f"**Location:** {location}"
+            )
+
+        order = patient.get(
+            "flowstatus"
+        )
+
+        if order:
+            st.write(
+                f"**Active Optical Order:** {order}"
+            )
+
+        cl_order = patient.get(
+            "cl_flowstatus"
+        )
+
+        if cl_order:
+            st.write(
+                f"**Contact Lens Order:** {cl_order}"
+            )
+
+
 # ============================================================
 # LIVE CALL AREA
 # ============================================================
@@ -826,4 +1055,78 @@ def live_calls():
                         call
                     )
 
-live_calls()
+# ============================================================
+# MISSED CALL AREA
+# ============================================================
+@st.fragment(run_every="2s")
+def missed_calls_view():
+
+    calls = load_missed_calls()
+
+    if "*" in allowed_extensions:
+        visible_calls = calls
+    else:
+        visible_calls = filter_calls_by_extension(
+            calls,
+            typed_extension
+        )
+
+    if len(visible_calls) == 0:
+        st.info(
+            "No unresolved missed calls."
+        )
+        return
+
+    if len(visible_calls) == 1:
+        st.subheader(
+            "1 Unresolved Missed Call"
+        )
+    else:
+        st.subheader(
+            f"{len(visible_calls)} Unresolved Missed Calls"
+        )
+
+    st.caption(
+        "A missed call disappears when that number calls again or when the office places an outbound call to it."
+    )
+
+    columns_per_row = 3
+
+    for start in range(
+        0,
+        len(visible_calls),
+        columns_per_row
+    ):
+        row_calls = visible_calls[
+            start:
+            start + columns_per_row
+        ]
+
+        columns = st.columns(
+            columns_per_row
+        )
+
+        for index, call in enumerate(
+            row_calls
+        ):
+            with columns[index]:
+                with st.container(
+                    border=True
+                ):
+                    render_missed_call(
+                        call
+                    )
+
+
+active_tab, missed_tab = st.tabs(
+    [
+        "Active Calls",
+        "Missed Calls"
+    ]
+)
+
+with active_tab:
+    live_calls()
+
+with missed_tab:
+    missed_calls_view()
