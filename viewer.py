@@ -578,14 +578,14 @@ def render_call(call):
         "complete"
     )
 
-    extension_numbers = call.get(
-        "extension_numbers",
+    extension_ids = call.get(
+        "active_extension_ids",
         []
     )
 
     extensions_text = ", ".join(
-        str(x)
-        for x in extension_numbers
+        extension_name(x)
+        for x in extension_ids
     )
 
     st.markdown(
@@ -595,11 +595,6 @@ def render_call(call):
     st.markdown(
         f"**{state}**"
     )
-    if extensions_text:
-
-        st.write(
-            f"**Extension:** {extensions_text}"
-        )
 
     st.divider()
 
@@ -660,6 +655,15 @@ def render_call(call):
         )
 
         st.write(
+            "**DOB:** "
+            + readable_date(
+                patient.get(
+                    "dob"
+                )
+            )
+        )
+
+        st.write(
             "**Last Visit:** "
             + readable_date(
                 patient.get(
@@ -687,59 +691,14 @@ def render_call(call):
                 f"**Location:** {location}"
             )
 
-    # ========================================================
-    # OPTICAL ORDER
-    # ========================================================
-
-    order = patient.get(
-        "flowstatus"
-    )
-
-    order_date = patient.get(
-        "order_date"
-    )
-
-    if order:
-
-        st.write(
-            f"**Optical Order:** {order}"
+        order = patient.get(
+            "flowstatus"
         )
 
-        if order_date:
+        if order:
 
-            st.caption(
-                "Order Date: "
-                + readable_datetime(
-                    order_date
-                )
-            )
-
-
-    # ========================================================
-    # CONTACT LENS ORDER
-    # ========================================================
-
-    cl_order = patient.get(
-        "cl_flowstatus"
-    )
-
-    cl_order_date = patient.get(
-        "cl_order_date"
-    )
-
-    if cl_order:
-
-        st.write(
-            f"**Contact Lens Order:** {cl_order}"
-        )
-
-        if cl_order_date:
-
-            st.caption(
-                "CL Order Date: "
-                + readable_datetime(
-                    cl_order_date
-                )
+            st.write(
+                f"**Active Order:** {order}"
             )
             
 # ============================================================
