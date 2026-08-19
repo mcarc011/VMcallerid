@@ -915,6 +915,43 @@ def render_missed_call(call):
             )
         )
 
+    
+    # ========================================================
+    # MANUALLY REMOVE MISSED CALL
+    # ========================================================
+
+    st.divider()
+
+    if st.button(
+        "✓ Remove Missed Call",
+        key=f"remove_missed_{phone}",
+        use_container_width=True
+    ):
+
+        try:
+
+            delete_missed_call(
+                call.get(
+                    "raw_phone",
+                    phone
+                )
+            )
+
+            # Don't allow cached missed calls to
+            # temporarily redisplay the deleted card.
+            st.session_state.pop(
+                "last_good_missed_calls",
+                None
+            )
+
+            st.rerun()
+
+        except Exception as e:
+
+            st.error(
+                f"Could not remove missed call: {e}"
+            )
+
     st.divider()
 
     if lookup_status == "loading":
@@ -1033,41 +1070,6 @@ def render_missed_call(call):
             )
 
 
-    # ========================================================
-    # MANUALLY REMOVE MISSED CALL
-    # ========================================================
-
-    st.divider()
-
-    if st.button(
-        "✓ Remove Missed Call",
-        key=f"remove_missed_{phone}",
-        use_container_width=True
-    ):
-
-        try:
-
-            delete_missed_call(
-                call.get(
-                    "raw_phone",
-                    phone
-                )
-            )
-
-            # Don't allow cached missed calls to
-            # temporarily redisplay the deleted card.
-            st.session_state.pop(
-                "last_good_missed_calls",
-                None
-            )
-
-            st.rerun()
-
-        except Exception as e:
-
-            st.error(
-                f"Could not remove missed call: {e}"
-            )
 
 
 # ============================================================
