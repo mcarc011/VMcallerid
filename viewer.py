@@ -331,16 +331,11 @@ def load_calls():
     except Exception as e:
 
         print(
-            "Caller ID API connection error:",
+            "Missed call API connection error:",
             e
         )
 
-        # Keep displaying the last known state
-        # instead of clearing the screen.
-        return st.session_state.get(
-            "last_good_calls",
-            []
-        )
+        return []
 
 def load_missed_calls():
 
@@ -740,6 +735,31 @@ def render_call(call):
             )
         )
 
+        latest_text = patient.get(
+            "latest_text_message"
+        )
+
+        latest_text_time = patient.get(
+            "latest_text_time"
+        )
+
+        if latest_text:
+
+            st.write(
+                "💬 **Most Recent Text Today:**"
+            )
+
+            if latest_text_time:
+                st.caption(
+                    readable_datetime(
+                        latest_text_time
+                    )
+                )
+
+            st.info(
+                latest_text
+            )
+
         st.write(
             "**Last Visit:** "
             + readable_date(
@@ -904,6 +924,31 @@ def render_missed_call(call):
                 )
             )
         )
+
+        latest_text = patient.get(
+            "latest_text_message"
+        )
+
+        latest_text_time = patient.get(
+            "latest_text_time"
+        )
+
+        if latest_text:
+
+            st.write(
+                "💬 **Most Recent Text Today:**"
+            )
+
+            if latest_text_time:
+                st.caption(
+                    readable_datetime(
+                        latest_text_time
+                    )
+                )
+
+            st.info(
+                latest_text
+            )
 
         st.write(
             "**Last Visit:** "
