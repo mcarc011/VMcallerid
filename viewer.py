@@ -811,6 +811,40 @@ def render_call(call):
 # ============================================================
 # RENDER ONE MISSED CALL CARD
 # ============================================================
+def delete_missed_call(phone):
+
+    base_url = str(
+        st.secrets["CALLER_ID_API_BASE_URL"]
+    ).strip()
+
+    base_url = (
+        base_url
+        .replace("%20", "")
+        .rstrip("/")
+    )
+
+    url = (
+        base_url
+        + "/api/missed-calls/"
+        + str(phone)
+    )
+
+    response = requests.delete(
+        url,
+        headers={
+            "X-API-Key":
+                str(
+                    st.secrets[
+                        "CALLER_ID_API_KEY"
+                    ]
+                ).strip()
+        },
+        timeout=3
+    )
+
+    response.raise_for_status()
+
+    return response.json()
 
 def render_missed_call(call):
 
@@ -996,6 +1030,43 @@ def render_missed_call(call):
         if cl_order:
             st.write(
                 f"**Contact Lens Order:** {cl_order}"
+            )
+
+
+    # ========================================================
+    # MANUALLY REMOVE MISSED CALL
+    # ========================================================
+
+    st.divider()
+
+    if st.button(
+        "✓ Remove Missed Call",
+        key=f"remove_missed_{phone}",
+        use_container_width=True
+    ):
+
+        try:
+
+            delete_missed_call(
+                call.get(
+                    "raw_phone",
+                    phone
+                )
+            )
+
+            # Don't allow cached missed calls to
+            # temporarily redisplay the deleted card.
+            st.session_state.pop(
+                "last_good_missed_calls",
+                None
+            )
+
+            st.rerun()
+
+        except Exception as e:
+
+            st.error(
+                f"Could not remove missed call: {e}"
             )
 
 
