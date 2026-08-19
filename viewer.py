@@ -792,14 +792,31 @@ def render_call(call):
             "flowstatus"
         )
 
+        order_date = patient.get(
+            "order_date"
+        )
+
         if order:
 
             st.write(
-                f"**Active Optical Order:** {order}"
+                f"**Most Recent Optical Order:** {order}"
             )
+
+            if order_date:
+
+                st.write(
+                    "**Order Date:** "
+                    + readable_date(
+                        order_date
+                    )
+                )
 
         cl_order = patient.get(
             "cl_flowstatus"
+        )
+
+        cl_order_date = patient.get(
+            "cl_order_date"
         )
 
         if cl_order:
@@ -807,6 +824,15 @@ def render_call(call):
             st.write(
                 f"**Contact Lens Order:** {cl_order}"
             )
+
+            if cl_order_date:
+
+                st.write(
+                    "**CL Order Date:** "
+                    + readable_date(
+                        cl_order_date
+                    )
+                )
             
 # ============================================================
 # RENDER ONE MISSED CALL CARD
@@ -1055,19 +1081,47 @@ def render_missed_call(call):
             "flowstatus"
         )
 
+        order_date = patient.get(
+            "order_date"
+        )
+
         if order:
+
             st.write(
-                f"**Active Optical Order:** {order}"
+                f"**Most Recent Optical Order:** {order}"
             )
+
+            if order_date:
+
+                st.write(
+                    "**Order Date:** "
+                    + readable_date(
+                        order_date
+                    )
+                )
 
         cl_order = patient.get(
             "cl_flowstatus"
         )
 
+        cl_order_date = patient.get(
+            "cl_order_date"
+        )
+
         if cl_order:
+
             st.write(
                 f"**Contact Lens Order:** {cl_order}"
             )
+
+            if cl_order_date:
+
+                st.write(
+                    "**CL Order Date:** "
+                    + readable_date(
+                        cl_order_date
+                    )
+                )
 
 
 
