@@ -804,7 +804,7 @@ def render_call(call):
 
             if order_date:
 
-                st.write(
+                st.caption(
                     "**Order Date:** "
                     + readable_date(
                         order_date
@@ -827,7 +827,7 @@ def render_call(call):
 
             if cl_order_date:
 
-                st.write(
+                st.caption(
                     "**CL Order Date:** "
                     + readable_date(
                         cl_order_date
@@ -940,7 +940,7 @@ def render_missed_call(call):
                 extension_numbers
             )
         )
-
+    
     
     # ========================================================
     # MANUALLY REMOVE MISSED CALL
@@ -1093,7 +1093,7 @@ def render_missed_call(call):
 
             if order_date:
 
-                st.write(
+                st.caption(
                     "**Order Date:** "
                     + readable_date(
                         order_date
@@ -1116,7 +1116,7 @@ def render_missed_call(call):
 
             if cl_order_date:
 
-                st.write(
+                st.caption(
                     "**CL Order Date:** "
                     + readable_date(
                         cl_order_date
