@@ -1,3 +1,4 @@
 extra-streamlit-components
 itsdangerous
 bcrypt
+dotenv
