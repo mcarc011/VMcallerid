@@ -1356,11 +1356,28 @@ def load_daily_metric(endpoint, cache_key):
                 raise ValueError("Invalid username breakdown")
         st.session_state[cache_key] = data
         return data, None
-    except Exception:
+    except requests.HTTPError as exc:
+        status = exc.response.status_code
         return st.session_state.get(cache_key), (
-            "No se pudo actualizar. Compruebe que el servidor tenga "
-            "el endpoint de métricas. Los datos anteriores, si aparecen, "
-            "pueden estar desactualizados."
+            f"Error HTTP {status} en {endpoint}. "
+            "401: clave incorrecta. "
+            "404: endpoint no disponible. "
+            "503: error de consulta; revise la consola del servidor."
+        )
+
+    except requests.Timeout:
+        return st.session_state.get(cache_key), (
+            f"Tiempo de espera agotado en {endpoint}."
+        )
+
+    except requests.ConnectionError:
+        return st.session_state.get(cache_key), (
+            f"No se pudo conectar al servidor para {endpoint}."
+        )
+
+    except Exception as exc:
+        return st.session_state.get(cache_key), (
+            f"Error en {endpoint}: {type(exc).__name__}: {exc}"
         )
 
 
