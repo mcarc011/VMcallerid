@@ -4,6 +4,10 @@ import os
 import bcrypt
 import streamlit as st
 
+from login_state import (
+    begin_login, begin_logout, require_current_login, restore_login,
+)
+
 
 # ============================================================
 # CONFIG
@@ -89,6 +93,9 @@ def authenticate(username, password):
         username
     ]
 
+    if user.get("disabled", False):
+        return False
+
     stored_hash = user[
         "password_hash"
     ]
@@ -161,13 +168,7 @@ def login_screen():
                 password
             ):
 
-                st.session_state[
-                    "authenticated"
-                ] = True
-
-                st.session_state[
-                    "username"
-                ] = username
+                begin_login(username)
 
                 st.rerun()
 
@@ -181,6 +182,8 @@ def login_screen():
 # ============================================================
 # CHECK LOGIN
 # ============================================================
+
+restore_login()
 
 if not st.session_state.get(
     "authenticated",
@@ -245,7 +248,7 @@ with st.sidebar:
         use_container_width=True
     ):
 
-        st.session_state.clear()
+        begin_logout()
 
         st.rerun()
 
@@ -1132,6 +1135,8 @@ def render_missed_call(call):
 @st.fragment(run_every="2s")
 def live_calls():
 
+    require_current_login()
+
     calls = load_calls()
 
     visible_calls = filter_calls_by_extension(
@@ -1256,6 +1261,8 @@ def live_calls():
 # ============================================================
 @st.fragment(run_every="2s")
 def missed_calls_view():
+
+    require_current_login()
 
     calls = load_missed_calls()
 
@@ -1383,6 +1390,7 @@ def load_daily_metric(endpoint, cache_key):
 
 @st.fragment(run_every="30s")
 def daily_activity():
+    require_current_login()
     # Defensive guard also applies to scheduled fragment reruns.
     if not st.session_state.get("authenticated", False):
         return
