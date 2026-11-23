@@ -41,26 +41,29 @@ at `https://vumessaging.ngrok.io` (VM port 5001). Install the unified-inbox VM
 update first; updating `C:\apps\RCcallerid\viewer.py` alone does not update this
 Streamlit Cloud deployment.
 
-Each staff browser session must sign in to messaging using the existing Ale
-Messaging staff username/password. These credentials stay in that server-side
-session, are not embedded in URLs or code, and are cleared by caller ID sign-out.
-Caller ID login expiry/revocation is checked on every messaging fragment refresh.
-Caller extension permissions and call monitoring are unchanged; messaging access
-requires the separate staff account and does not inherit the caller API key.
+The Messages page uses the existing caller ID login, with no second messaging
+password prompt. Install `Ale-Caller-Login-Update.zip` on the VM to enable the
+bridge. Streamlit signs short-lived, single-use requests server-side using its
+existing `CALLER_ID_API_KEY`; the VM reads the matching key from
+`C:\apps\RCcallerid\ringcentral.env`. No new Streamlit secret is needed.
+The key never enters browser JavaScript, URLs, or component arguments.
 
-Optionally override the messaging URL in Streamlit **Settings → Secrets**:
+Caller login expiry/revocation is checked before each messaging action. All
+caller accounts have messaging access by default; set `messaging_access = false`
+in an individual user's secrets section to deny it. Messaging access includes
+all conversations in the inbox, independently of call extension permissions.
+The standalone Whatsappy `/gui` page retains its staff password.
 
-```toml
-ALE_MESSAGING_URL = "https://vumessaging.ngrok.io"
-```
+Signed requests bind the exact HTTP method, path, query and body; expire after
+75 seconds; and reject replayed nonces. Only inbox history, status, replies,
+thread mode and archive endpoints accept this delegation. Keep VM time synced.
+After rotating the caller API key, update both sides and restart Ale Messaging.
 
-Keep this setting at the TOML root, before any `[section]` headers. No OpenAI,
-Sinch, SQL or messaging password belongs in this repository. External URLs must
-use HTTPS without embedded credentials or query strings; redirects are refused.
-Changing the origin requires staff to sign in again before credentials are sent.
-The existing VM basic authentication remains required for all message-history,
-reply, pause and resume requests. A public caller ID URL alone never grants
-messaging access.
+Optionally set root-level `ALE_MESSAGING_URL` in Streamlit Secrets to an HTTPS
+origin without credentials or query strings. The default is
+`https://vumessaging.ngrok.io`. Redirects are refused. No OpenAI, Sinch, SQL or
+messaging password belongs in this repository. A public caller ID URL alone
+never grants access to conversations.
 
 The inbox supports separate SMS/WhatsApp threads, recent history, staff replies,
 and pausing/resuming Ale. Staff sends use per-request IDs; uncertain sends need
@@ -92,7 +95,7 @@ Names populate progressively in batches of up to 25, with selected conversations
 prioritized. The VM uses two separate background workers so name queries do not
 consume the live caller lookup executor. Cached names expire after five minutes.
 No name lookup, registration, booking, or message send runs without the existing
-caller login and messaging staff authorization.
+caller login and server-side messaging authorization.
 
 Validation includes the existing login tests, workspace action/scope checks,
 patient-name client tests, and five JavaScript interaction tests for selected
@@ -113,3 +116,4 @@ Caller ID live-call refresh behavior is unchanged and does not run on Messages.
 **Take over** and staff replies pause only the selected channel+patient+business
 number thread. **Resume Ale** applies to future messages in that same thread;
 other conversations are unaffected and SMS opt-outs are still enforced.
+

@@ -57,4 +57,23 @@ class CallerTests(unittest.TestCase):
   tree=ast.parse((Path(__file__).resolve().parents[1]/'viewer.py').read_text(encoding='utf-8'))
   fragment=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='messaging_view')
   self.assertTrue(all(not isinstance(d,ast.Call) for d in fragment.decorator_list))
+ def test_caller_login_skips_extra_staff_login(self):
+  st=FakeStreamlit();st.session_state['username']='operator';st.secrets.update(CALLER_ID_API_KEY='synthetic-key',users={'operator':{}});module=load(st)
+  guard=Mock();draw=Mock();send=Mock(return_value=Mock(status_code=200))
+  with patch.dict(sys.modules,{'login_state':types.SimpleNamespace(require_current_login=guard),'inbox_workspace':types.SimpleNamespace(draw_workspace=draw),'caller_bridge':types.SimpleNamespace(send_request=send)}):
+   module.messaging_panel(full_page=True,caller_login=True)
+   draw.assert_called_once();self.assertTrue(draw.call_args.kwargs['caller_login']);draw.call_args.args[0]('GET','/messages/history');self.assertEqual(send.call_args.args[2:4],('synthetic-key','operator'));self.assertEqual(guard.call_count,2)
+   self.assertFalse(any('Sign in with the Ale' in text or 'synthetic-key' in text for text in st.display))
+ def test_caller_account_can_be_denied_messaging_without_network(self):
+  st=FakeStreamlit();st.session_state['username']='operator';st.secrets.update(CALLER_ID_API_KEY='synthetic-key',users={'operator':{'messaging_access':False}});module=load(st)
+  draw=Mock();send=Mock()
+  with patch.dict(sys.modules,{'login_state':types.SimpleNamespace(require_current_login=Mock()),'inbox_workspace':types.SimpleNamespace(draw_workspace=draw),'caller_bridge':types.SimpleNamespace(send_request=send)}):
+   module.messaging_panel(full_page=True,caller_login=True);draw.assert_not_called();send.assert_not_called()
+ def test_caller_login_must_validate_before_messaging(self):
+  class NotLoggedIn(BaseException):pass
+  st=FakeStreamlit();module=load(st);draw=Mock()
+  with patch.dict(sys.modules,{'login_state':types.SimpleNamespace(require_current_login=Mock(side_effect=NotLoggedIn())),'inbox_workspace':types.SimpleNamespace(draw_workspace=draw),'caller_bridge':types.SimpleNamespace(send_request=Mock())}):
+   with self.assertRaises(NotLoggedIn):module.messaging_panel(full_page=True,caller_login=True)
+   draw.assert_not_called()
 if __name__=='__main__':unittest.main()
+

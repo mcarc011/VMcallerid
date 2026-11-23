@@ -12,7 +12,7 @@ def clear_messaging_state():
         if name.startswith('_ale_') or name.startswith('ale_reply_text_'):st.session_state.pop(name,None)
 
 
-def messaging_panel(calls=None,default_url=None,full_page=False):
+def messaging_panel(calls=None,default_url=None,full_page=False,caller_login=False):
     # Credentials are entered by each staff viewer, never inherited from a server
     # .env into a publicly accessible dashboard or embedded in an iframe URL.
     with nullcontext() if full_page else st.expander('SMS + WhatsApp conversations',expanded=False):
@@ -36,6 +36,28 @@ def messaging_panel(calls=None,default_url=None,full_page=False):
             except Exception:st.error('Messaging port configuration unavailable.');return
             if not 1024<=port<=65535:st.error('Messaging port configuration invalid.');return
             base=f'http://127.0.0.1:{port}'
+        if caller_login:
+            from login_state import require_current_login
+            from caller_bridge import send_request
+            require_current_login()
+            username=st.session_state.get('username')
+            current=st.secrets.get('users',{}).get(username,{})
+            if not username or current.get('messaging_access',True) is False:
+                st.error('Messaging access is not enabled for this caller ID account.');return
+            token=str(st.secrets.get('CALLER_ID_API_KEY','')).strip()
+            if not token:st.error('Caller ID messaging connection is not configured.');return
+            def delegated_call(method,path,**kwargs):
+                require_current_login()
+                account=st.secrets.get('users',{}).get(username,{})
+                if account.get('messaging_access',True) is False:raise PermissionError('Messaging access disabled')
+                response=send_request(method,base+path,token,username,**kwargs)
+                if response.status_code in (401,403):
+                    clear_messaging_state()
+                    raise PermissionError('Caller ID messaging connection needs its VM update')
+                return response
+            from inbox_workspace import draw_workspace
+            draw_workspace(delegated_call,caller_login=True)
+            return
         if auth and st.session_state.get('_ale_inbox_base')!=base:
             clear_messaging_state();auth=None
         def call(method,path,**kwargs):
@@ -127,3 +149,4 @@ def messaging_panel(calls=None,default_url=None,full_page=False):
         except PermissionError:st.error('Messaging sign-in expired. Sign in again.');return
         except requests.RequestException:st.error('Messaging request unavailable or send outcome unknown. Check Sinch before retrying a send.');return
         except (ValueError,KeyError,IndexError):st.error('Messaging response unavailable. Refresh the panel.');return
+

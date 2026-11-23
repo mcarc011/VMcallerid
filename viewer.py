@@ -286,7 +286,7 @@ from caller_messages import messaging_panel
 @st.fragment
 def messaging_view():
     require_current_login()
-    messaging_panel(default_url="https://vumessaging.ngrok.io",full_page=True)
+    messaging_panel(default_url="https://vumessaging.ngrok.io",full_page=True,caller_login=True)
 
 
 if "caller_workspace" not in st.session_state:
@@ -1478,6 +1478,7 @@ with active_tab:
 
 with missed_tab:
     missed_calls_view()
+
 
 
 
