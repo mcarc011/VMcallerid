@@ -36,7 +36,7 @@ Run the auth regression tests with `python -m unittest discover -s tests -v`.
 
 ## SMS + WhatsApp inbox
 
-The **SMS + WhatsApp** tab connects server-side to the VM's Ale Messaging service
+The **Messages** workspace connects server-side to the VM's Ale Messaging service
 at `https://vumessaging.ngrok.io` (VM port 5001). Install the unified-inbox VM
 update first; updating `C:\apps\RCcallerid\viewer.py` alone does not update this
 Streamlit Cloud deployment.
@@ -66,3 +66,37 @@ The inbox supports separate SMS/WhatsApp threads, recent history, staff replies,
 and pausing/resuming Ale. Staff sends use per-request IDs; uncertain sends need
 Sinch review before retrying. SMS opt-outs and WhatsApp reply-window restrictions
 are enforced by the VM service. Provider acceptance does not confirm delivery.
+
+
+## Full-page inbox and caller ID patient names
+
+Choose **Messages** in the sidebar to open the full-height Whatsappy-style inbox.
+The conversation list has channel/status filters and name/phone search. Message
+history and the reply composer stay in the right pane; drafts remain scoped to
+each channel, patient phone, and business sender. Caller ID dashboards remain in
+**Caller ID** and are not rendered above the inbox. Messages are plain text,
+never interpolated HTML. Credentials and caller API keys never enter the component
+arguments or browser JavaScript. Fragment refreshes never replay a send action.
+
+Patient labels use the existing VM caller ID `lookup_family` function through
+`POST /api/messaging/patient-names`, protected by its existing API key. Install the
+separate VM name-endpoint update in `C:\apps\RCcallerid` and restart caller ID
+monitoring. No caller API key, database password or patient data should be committed.
+The endpoint returns names only, keeps the existing duplicate/family/office-number
+rules, and does not alter patient verification for orders or bookings. Shared
+numbers show multiple patient names. Unsupported international numbers are not
+matched by their last ten digits. Until lookup is available, phone numbers and
+existing WhatsApp profile names remain usable.
+
+Names populate progressively in batches of up to 25, with selected conversations
+prioritized. The VM uses two separate background workers so name queries do not
+consume the live caller lookup executor. Cached names expire after five minutes.
+No name lookup, registration, booking, or message send runs without the existing
+caller login and messaging staff authorization.
+
+Validation includes the existing login tests, workspace action/scope checks,
+patient-name client tests, and five JavaScript interaction tests for selected
+channel, escaped text, per-conversation drafts and no sends during refresh.
+Browser screenshot verification was unavailable in the development environment.
+
+Direct Messages workspace link: https://vmcallerid.streamlit.app/?view=messages
