@@ -16,7 +16,7 @@ function setup(){
  const b={...a,channel:'WHATSAPP',sender:'app-id',name:'Luis Example',patient_names:['Luis Example'],messages:[]};
  const render=result=>listeners.message({source:parent,data:{type:'streamlit:render',args:{conversations:[a,b],filters:{channel:'ALL',days:90},result}}});
  const latest=()=>posts.filter(p=>p.type==='streamlit:setComponentValue').slice(-1)[0]?.value;
- const ack=()=>{const p=latest();render({id:p.id,type:p.type,ok:true,message:''})};
+ const ack=()=>{const p=latest();if(p)render({id:p.id,type:p.type,ok:true,message:''})};
  render();return {get,posts,tags,render,latest,ack,document,a,b};
 }
 test('conversation selection sends through its own channel and business sender',()=>{const s=setup();s.get('list').children[0].onclick();s.ack();s.get('reply').value='Staff reply';s.get('send').onclick();const send=s.latest();assert.equal(send.type,'send');assert.equal(send.channel,'SMS');assert.equal(send.phone,'+13055550123');assert.equal(send.sender,'+13055550124');assert.equal(send.text,'Staff reply');assert.match(send.request_id,/^[a-f0-9]{32}$/)});
@@ -25,3 +25,5 @@ test('drafts remain scoped to each conversation',()=>{const s=setup();s.get('lis
 test('refresh and acknowledgements never send a reply automatically',()=>{const s=setup();s.get('list').children[0].onclick();s.ack();s.get('reply').value='Reply';s.get('send').onclick();const send=s.latest();const before=s.posts.filter(p=>p.type==='streamlit:setComponentValue'&&p.value.type==='send').length;s.render({id:send.id,type:'send',ok:true,channel:send.channel,phone:send.phone,sender:send.sender,message:'Accepted'});s.render();assert.equal(s.get('reply').value,'');assert.equal(s.posts.filter(p=>p.type==='streamlit:setComponentValue'&&p.value.type==='send').length,before)});
 
 test('search finds another patient on a shared number without exact accents',()=>{const s=setup();s.a.patient_names=['Ana Example','Carlos García'];s.render();s.get('search').value='garcia';s.get('search').oninput();assert.equal(s.get('list').children.length,1);assert.equal(s.get('list').children[0].tag,'button')});
+
+test('opening a conversation does not trigger a Streamlit rerun',()=>{const s=setup();s.get('list').children[0].onclick();s.get('reply').value='Draft';s.get('list').children[1].onclick();assert.equal(s.posts.filter(p=>p.type==='streamlit:setComponentValue').length,0)});
