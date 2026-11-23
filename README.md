@@ -31,3 +31,38 @@ cookies for the app. Streamlit's temporary session state alone is no longer the
 source of authentication. Cookie writes/deletes are acknowledged before reruns.
 
 Run the auth regression tests with `python -m unittest discover -s tests -v`.
+
+
+
+## SMS + WhatsApp inbox
+
+The **SMS + WhatsApp** tab connects server-side to the VM's Ale Messaging service
+at `https://vumessaging.ngrok.io` (VM port 5001). Install the unified-inbox VM
+update first; updating `C:\apps\RCcallerid\viewer.py` alone does not update this
+Streamlit Cloud deployment.
+
+Each staff browser session must sign in to messaging using the existing Ale
+Messaging staff username/password. These credentials stay in that server-side
+session, are not embedded in URLs or code, and are cleared by caller ID sign-out.
+Caller ID login expiry/revocation is checked on every messaging fragment refresh.
+Caller extension permissions and call monitoring are unchanged; messaging access
+requires the separate staff account and does not inherit the caller API key.
+
+Optionally override the messaging URL in Streamlit **Settings → Secrets**:
+
+```toml
+ALE_MESSAGING_URL = "https://vumessaging.ngrok.io"
+```
+
+Keep this setting at the TOML root, before any `[section]` headers. No OpenAI,
+Sinch, SQL or messaging password belongs in this repository. External URLs must
+use HTTPS without embedded credentials or query strings; redirects are refused.
+Changing the origin requires staff to sign in again before credentials are sent.
+The existing VM basic authentication remains required for all message-history,
+reply, pause and resume requests. A public caller ID URL alone never grants
+messaging access.
+
+The inbox supports separate SMS/WhatsApp threads, recent history, staff replies,
+and pausing/resuming Ale. Staff sends use per-request IDs; uncertain sends need
+Sinch review before retrying. SMS opt-outs and WhatsApp reply-window restrictions
+are enforced by the VM service. Provider acceptance does not confirm delivery.
