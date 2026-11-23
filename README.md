@@ -100,3 +100,16 @@ channel, escaped text, per-conversation drafts and no sends during refresh.
 Browser screenshot verification was unavailable in the development environment.
 
 Direct Messages workspace link: https://vmcallerid.streamlit.app/?view=messages
+
+
+## Stable messaging page
+
+Messages uses no automatic rerun timer. Choosing a conversation, scrolling,
+searching loaded names, and typing stay entirely within the inbox component.
+Click **Refresh** to fetch new messages and updated patient names; new messages do
+not appear automatically. Explicit filter changes and staff send/pause/resume
+requests still contact the server, with caller login rechecked for each action.
+Caller ID live-call refresh behavior is unchanged and does not run on Messages.
+**Take over** and staff replies pause only the selected channel+patient+business
+number thread. **Resume Ale** applies to future messages in that same thread;
+other conversations are unaffected and SMS opt-outs are still enforced.
