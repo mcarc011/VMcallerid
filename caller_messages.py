@@ -1,15 +1,21 @@
 """Protected SMS/WhatsApp panel for the existing Streamlit caller ID viewer."""
 import time,uuid,hashlib,os
 from urllib.parse import urlparse
+from contextlib import nullcontext
 from pathlib import Path
 import requests
 import streamlit as st
 
 
-def messaging_panel(calls=None,default_url=None):
+def clear_messaging_state():
+    for name in list(st.session_state):
+        if name.startswith('_ale_') or name.startswith('ale_reply_text_'):st.session_state.pop(name,None)
+
+
+def messaging_panel(calls=None,default_url=None,full_page=False):
     # Credentials are entered by each staff viewer, never inherited from a server
     # .env into a publicly accessible dashboard or embedded in an iframe URL.
-    with st.expander('SMS + WhatsApp conversations',expanded=False):
+    with nullcontext() if full_page else st.expander('SMS + WhatsApp conversations',expanded=False):
         auth=st.session_state.get('_ale_staff_auth')
         configured=os.environ.get('ALE_MESSAGING_URL','').strip()
         if not configured:
@@ -31,11 +37,11 @@ def messaging_panel(calls=None,default_url=None):
             if not 1024<=port<=65535:st.error('Messaging port configuration invalid.');return
             base=f'http://127.0.0.1:{port}'
         if auth and st.session_state.get('_ale_inbox_base')!=base:
-            st.session_state.pop('_ale_staff_auth',None);st.session_state.pop('_ale_inbox_data',None);auth=None
+            clear_messaging_state();auth=None
         def call(method,path,**kwargs):
             response=requests.request(method,base+path,auth=st.session_state.get('_ale_staff_auth'),timeout=(3,15),allow_redirects=False,headers={'ngrok-skip-browser-warning':'true'},**kwargs)
             if response.status_code in (401,403):
-                st.session_state.pop('_ale_staff_auth',None);st.session_state.pop('_ale_inbox_data',None)
+                clear_messaging_state()
                 raise PermissionError('Staff sign-in required')
             return response
         if not auth:
@@ -50,6 +56,14 @@ def messaging_panel(calls=None,default_url=None):
                     if response.status_code!=200:st.error('Messaging sign-in failed.');return
                     st.session_state['_ale_staff_auth']=(user,password);st.session_state['_ale_inbox_base']=base;st.rerun()
                 except requests.RequestException:st.error('Messaging service unavailable.')
+            return
+        if full_page:
+            from inbox_workspace import draw_workspace
+            if st.sidebar.button('Sign out of messaging',key='ale_workspace_logout'):
+                for name in list(st.session_state):
+                    if name.startswith('_ale_') or name.startswith('ale_reply_text_'):st.session_state.pop(name,None)
+                st.rerun()
+            draw_workspace(call)
             return
         left,right=st.columns(2)
         if left.button('Refresh messages',key='ale_refresh'):

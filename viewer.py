@@ -279,6 +279,29 @@ def extension_name(
         )
 
 
+# A dedicated inbox workspace keeps conversation history out of call-dashboard panels.
+from caller_messages import messaging_panel
+
+
+@st.fragment(run_every="10s")
+def messaging_view():
+    require_current_login()
+    messaging_panel(default_url="https://vumessaging.ngrok.io",full_page=True)
+
+
+if "caller_workspace" not in st.session_state:
+    st.session_state["caller_workspace"]="Messages" if st.query_params.get("view")=="messages" else "Caller ID"
+workspace=st.sidebar.radio("Workspace",["Caller ID","Messages"],key="caller_workspace")
+if workspace=="Messages":
+    st.query_params["view"]="messages"
+elif st.query_params.get("view")=="messages":
+    del st.query_params["view"]
+if workspace=="Messages":
+    st.title("Messages")
+    messaging_view()
+    st.stop()
+
+
 # ============================================================
 # LOAD CALL DATA
 # ============================================================
@@ -1442,11 +1465,10 @@ def daily_activity():
 daily_activity()
 
 
-active_tab, missed_tab, messaging_tab = st.tabs(
+active_tab, missed_tab = st.tabs(
     [
         "Active Calls",
-        "Missed Calls",
-        "SMS + WhatsApp"
+        "Missed Calls"
     ]
 )
 
@@ -1458,15 +1480,3 @@ with missed_tab:
 
 
 
-# Messaging stays behind both the caller ID login and its own staff authorization.
-from caller_messages import messaging_panel
-
-
-@st.fragment(run_every="10s")
-def messaging_view():
-    require_current_login()
-    messaging_panel(default_url="https://vumessaging.ngrok.io")
-
-
-with messaging_tab:
-    messaging_view()
