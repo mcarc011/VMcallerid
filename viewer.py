@@ -1442,10 +1442,11 @@ def daily_activity():
 daily_activity()
 
 
-active_tab, missed_tab = st.tabs(
+active_tab, missed_tab, messaging_tab = st.tabs(
     [
         "Active Calls",
-        "Missed Calls"
+        "Missed Calls",
+        "SMS + WhatsApp"
     ]
 )
 
@@ -1454,3 +1455,18 @@ with active_tab:
 
 with missed_tab:
     missed_calls_view()
+
+
+
+# Messaging stays behind both the caller ID login and its own staff authorization.
+from caller_messages import messaging_panel
+
+
+@st.fragment(run_every="10s")
+def messaging_view():
+    require_current_login()
+    messaging_panel(default_url="https://vumessaging.ngrok.io")
+
+
+with messaging_tab:
+    messaging_view()
