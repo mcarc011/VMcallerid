@@ -283,7 +283,7 @@ def extension_name(
 from caller_messages import messaging_panel
 
 
-@st.fragment(run_every="10s")
+@st.fragment
 def messaging_view():
     require_current_login()
     messaging_panel(default_url="https://vumessaging.ngrok.io",full_page=True)
@@ -298,6 +298,7 @@ elif st.query_params.get("view")=="messages":
     del st.query_params["view"]
 if workspace=="Messages":
     st.title("Messages")
+    st.caption("Messages stay in place while you read or reply. Use Refresh in the inbox to load new messages.")
     messaging_view()
     st.stop()
 

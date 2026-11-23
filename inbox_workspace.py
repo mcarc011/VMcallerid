@@ -21,7 +21,10 @@ def process_action(action,conversations,call):
     if not isinstance(action,dict) or not isinstance(action.get('id'),str) or not re.fullmatch(r'[a-f0-9]{32}',action['id']):raise ValueError('Invalid inbox action')
     kind=action.get('type');result={'id':action['id'],'type':kind,'ok':False}
     if kind=='filter':return {**result,'ok':True,'filters':filters_for(action),'message':''}
-    if kind=='refresh':return {**result,'ok':True,'message':'Conversations refreshed.'}
+    if kind=='refresh':
+        selected=action.get('selected_phone')
+        if selected and not any(c.get('phone')==selected for c in conversations):raise ValueError('Select an available conversation first.')
+        return {**result,'ok':True,'selected':selected,'message':'Conversations refreshed.'}
     scope=(action.get('channel'),action.get('phone'),action.get('sender'))
     if not any((c.get('channel'),c.get('phone'),c.get('sender'))==scope for c in conversations):raise ValueError('Select an available conversation first.')
     channel,phone,sender=scope
