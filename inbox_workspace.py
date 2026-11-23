@@ -55,7 +55,7 @@ def process_action(action,conversations,call):
     return result
 
 
-def draw_workspace(call):
+def draw_workspace(call,caller_login=False):
     filters=filters_for(st.session_state.get('_ale_workspace_filters'))
     cache=st.session_state.get('_ale_workspace_cache')
     errors={}
@@ -67,7 +67,7 @@ def draw_workspace(call):
             if not isinstance(data.get('conversations'),list):raise ValueError('Invalid history response')
             cache={'filters':filters,'time':time.monotonic(),'data':data};st.session_state['_ale_workspace_cache']=cache
     except PermissionError:
-        st.session_state.pop('_ale_workspace_cache',None);st.error('Messaging sign-in expired. Sign in again.');return
+        st.session_state.pop('_ale_workspace_cache',None);st.error('Caller ID messaging connection needs its VM update or authorization check.' if caller_login else 'Messaging sign-in expired. Sign in again.');return
     except (requests.RequestException,ValueError):
         if not cache:st.error('Could not load the inbox. Refresh or check the messaging service.');return
         errors['refresh']='Refresh unavailable. Showing the last loaded messages.'
@@ -88,8 +88,9 @@ def draw_workspace(call):
         if result.get('filters'):st.session_state['_ale_workspace_filters']=result['filters']
         if result['ok']:st.session_state.pop('_ale_workspace_cache',None)
     except PermissionError:
-        st.session_state.pop('_ale_workspace_cache',None);st.error('Messaging sign-in expired.');return
+        st.session_state.pop('_ale_workspace_cache',None);st.error('Caller ID messaging connection authorization was rejected.' if caller_login else 'Messaging sign-in expired.');return
     except ValueError as error:result={'id':event_id,'type':action.get('type'),'ok':False,'message':str(error)}
     except requests.RequestException:result={'id':event_id,'type':action.get('type'),'ok':False,'message':'Request outcome unknown. Check Sinch before retrying a send; this action will not be replayed automatically.'}
     st.session_state['_ale_workspace_result']=result
     st.rerun(scope='fragment')
+
