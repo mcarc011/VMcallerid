@@ -52,4 +52,9 @@ class CallerTests(unittest.TestCase):
   with patch.object(module.requests,'request') as request:
    module.messaging_panel(default_url='https://vumessaging.ngrok.io');request.assert_not_called()
    self.assertFalse(any('not configured' in value for value in st.display))
+ def test_messages_have_no_automatic_refresh_timer(self):
+  import ast
+  tree=ast.parse((Path(__file__).resolve().parents[1]/'viewer.py').read_text(encoding='utf-8'))
+  fragment=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='messaging_view')
+  self.assertTrue(all(not isinstance(d,ast.Call) for d in fragment.decorator_list))
 if __name__=='__main__':unittest.main()
