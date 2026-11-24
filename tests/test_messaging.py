@@ -52,11 +52,13 @@ class CallerTests(unittest.TestCase):
   with patch.object(module.requests,'request') as request:
    module.messaging_panel(default_url='https://vumessaging.ngrok.io');request.assert_not_called()
    self.assertFalse(any('not configured' in value for value in st.display))
- def test_messages_have_no_automatic_refresh_timer(self):
+ def test_messages_poll_only_their_fragment_every_five_seconds(self):
   import ast
   tree=ast.parse((Path(__file__).resolve().parents[1]/'viewer.py').read_text(encoding='utf-8'))
   fragment=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='messaging_view')
-  self.assertTrue(all(not isinstance(d,ast.Call) for d in fragment.decorator_list))
+  decorator=fragment.decorator_list[0]
+  self.assertIsInstance(decorator,ast.Call)
+  self.assertEqual(next(k.value.value for k in decorator.keywords if k.arg=='run_every'),'5s')
  def test_caller_login_skips_extra_staff_login(self):
   st=FakeStreamlit();st.session_state['username']='operator';st.secrets.update(CALLER_ID_API_KEY='synthetic-key',users={'operator':{}});module=load(st)
   guard=Mock();draw=Mock();send=Mock(return_value=Mock(status_code=200))
@@ -76,4 +78,5 @@ class CallerTests(unittest.TestCase):
    with self.assertRaises(NotLoggedIn):module.messaging_panel(full_page=True,caller_login=True)
    draw.assert_not_called()
 if __name__=='__main__':unittest.main()
+
 
