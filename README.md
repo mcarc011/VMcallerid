@@ -107,13 +107,17 @@ Direct Messages workspace link: https://vmcallerid.streamlit.app/?view=messages
 
 ## Stable messaging page
 
-Messages uses no automatic rerun timer. Choosing a conversation, scrolling,
-searching loaded names, and typing stay entirely within the inbox component.
-Click **Refresh** to fetch new messages and updated patient names; new messages do
-not appear automatically. Explicit filter changes and staff send/pause/resume
-requests still contact the server, with caller login rechecked for each action.
-Caller ID live-call refresh behavior is unchanged and does not run on Messages.
+Messages checks for new messages every five seconds while the page is open,
+using an independently scheduled Streamlit fragment. Each check revalidates caller
+login. History reads have a four-second cache; no separate browser timer or direct
+browser-to-VM credentials are used. Visible changes are rendered in the inbox;
+unchanged lists/messages retain DOM nodes, the selected thread, draft and reading
+position. New messages scroll into view only when the reader was already near
+the bottom. Repeated updates never replay staff sends. Manual Refresh remains
+available. Caller ID dashboard timers do not run on Messages. The inbox offers
+Last 4 hours and Last 24 hours, with 24 hours as the default.
 **Take over** and staff replies pause only the selected channel+patient+business
 number thread. **Resume Ale** applies to future messages in that same thread;
 other conversations are unaffected and SMS opt-outs are still enforced.
+
 

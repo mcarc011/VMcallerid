@@ -38,3 +38,7 @@ test('retired office warning is hidden while other service warnings remain',()=>
 
 
 test('short time windows emit hours instead of long day windows',()=>{const s=setup();s.get('days').value='4';s.get('days').onchange();assert.equal(s.latest().hours,4);assert.equal(s.latest().days,undefined)});
+
+
+test('background updates preserve draft, selected thread and reading position',()=>{const s=setup();s.get('list').children[0].onclick();s.get('reply').value='Unsent draft';s.get('reply').oninput();s.get('messages').scrollHeight=2000;s.get('messages').scrollTop=120;s.a.messages.push({direction:'inbound',message:'New message',timestamp:'2026-11-24T12:00:00Z'});s.render();assert.equal(s.get('reply').value,'Unsent draft');assert.equal(s.get('messages').scrollTop,120);assert.equal(s.get('person-name').textContent,'Ana Example');const rows=s.get('messages').children.filter(e=>e.className?.startsWith('bubble-row'));assert.equal(rows.at(-1).children[0].children[0].textContent,'New message');assert.equal(s.posts.filter(p=>p.type==='streamlit:setComponentValue').length,0)});
+test('unchanged background updates keep DOM nodes and avoid repeated resize messages',()=>{const s=setup();s.get('list').children[0].onclick();const row=s.get('list').children[0],bubble=s.get('messages').children[1];const heights=s.posts.filter(p=>p.type==='streamlit:setFrameHeight').length;s.render();s.render();assert.equal(s.get('list').children[0],row);assert.equal(s.get('messages').children[1],bubble);assert.equal(s.posts.filter(p=>p.type==='streamlit:setFrameHeight').length,heights)});

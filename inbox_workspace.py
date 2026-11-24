@@ -76,7 +76,7 @@ def draw_workspace(call,caller_login=False):
     cache=st.session_state.get('_ale_workspace_cache')
     errors={}
     try:
-        if not cache or cache['filters']!=filters or time.monotonic()-cache['time']>=9:
+        if not cache or cache['filters']!=filters or time.monotonic()-cache['time']>=4:
             response=call('GET','/messages/history',params={k:v for k,v in filters.items() if v!='' and k!='hours'})
             if response.status_code!=200:raise requests.RequestException('History unavailable')
             data=response.json()
@@ -109,5 +109,6 @@ def draw_workspace(call,caller_login=False):
     except requests.RequestException:result={'id':event_id,'type':action.get('type'),'ok':False,'message':'Request outcome unknown. Check Sinch before retrying a send; this action will not be replayed automatically.'}
     st.session_state['_ale_workspace_result']=result
     st.rerun(scope='fragment')
+
 
 
