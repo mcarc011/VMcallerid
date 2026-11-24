@@ -48,3 +48,14 @@ class WorkspaceTests(unittest.TestCase):
   self.assertEqual(len(self.module.recent_conversations([recent,old],24,now)),2)
   self.assertEqual(len(recent['messages']),2)
   self.assertEqual(self.module.recent_conversations([{'messages':[{'timestamp':'invalid'}]}],24,now),[])
+
+
+ def test_details_require_an_available_conversation(self):
+  import sys
+  from types import SimpleNamespace
+  lookup=Mock(return_value={'status':'pending','patients':[]})
+  with patch.dict(sys.modules,{'caller_details':SimpleNamespace(get_patient_details=lookup)}):
+   with self.assertRaises(ValueError):self.module.process_action(self.action(type='details'),[],Mock())
+   lookup.assert_not_called()
+   value=self.module.process_action(self.action(type='details'),[self.thread],Mock())
+   self.assertEqual(value['profile']['status'],'pending');lookup.assert_called_once_with(self.thread['phone'])
