@@ -13,7 +13,7 @@
 const $=id=>document.getElementById(id);
 const uid=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),x=>x.toString(16).padStart(2,'0')).join('');
 const key=c=>JSON.stringify([c.channel,c.phone,c.sender]);
-let data=[],selectedKey=null,currentChannel='ALL',statusFilter='all',automationFilter='all',pending=null,lastAck=null,lastSignature=null,drafts=new Map(),args={};
+let data=[],selectedKey=null,currentChannel='ALL',statusFilter='all',automationFilter='all',pending=null,lastAck=null,lastSignature=null,lastListSignature=null,lastFrameHeight=null,drafts=new Map(),args={};
 const escapeText=v=>String(v||'');
 const searchText=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const selected=()=>data.find(c=>key(c)===selectedKey);
@@ -25,7 +25,8 @@ function timeLabel(value,full=false){const d=new Date(value);if(Number.isNaN(d.g
 function shortTime(value){const d=new Date(value),now=new Date();if(Number.isNaN(d.getTime()))return '';return d.toDateString()===now.toDateString()?timeLabel(value):new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric'}).format(d);}
 function filtered(){const query=searchText($('search').value.trim()),digits=query.replace(/\D/g,'');return data.filter(c=>(currentChannel==='ALL'||c.channel===currentChannel)&&(automationFilter==='all'||(automationFilter==='hide'?!c.latest_vum_automation:!!c.latest_vum_automation))&&(statusFilter==='all'||(statusFilter==='staff'?c.paused:c.unresponded))&&(!query||searchText([c.name,...(c.patient_names||[])].join(' ')).includes(query)||c.phone.includes(query)||(digits.length>=3&&c.phone.replace(/\D/g,'').includes(digits))));}
 function renderList(){
- const list=$('list'),scroll=list.scrollTop;list.replaceChildren();const rows=filtered();if(selectedKey&&!rows.some(c=>key(c)===selectedKey)){saveDraft();selectedKey=null;lastSignature=null;renderChat();}setText('count',`${rows.length} conversation${rows.length===1?'':'s'}`);
+ const rows=filtered(),signature=JSON.stringify([rows,selectedKey,currentChannel,statusFilter,automationFilter,$('search').value]);if(signature===lastListSignature)return;lastListSignature=signature;
+ const list=$('list'),scroll=list.scrollTop;list.replaceChildren();if(selectedKey&&!rows.some(c=>key(c)===selectedKey)){saveDraft();selectedKey=null;lastSignature=null;renderChat();}setText('count',`${rows.length} conversation${rows.length===1?'':'s'}`);
  if(!rows.length){const empty=document.createElement('div');empty.className='list-empty';empty.textContent='No conversations match these filters.';list.appendChild(empty);return;}
  for(const c of rows){const row=document.createElement('button');row.type='button';row.className='thread'+(key(c)===selectedKey?' selected':'');row.setAttribute('aria-pressed',key(c)===selectedKey?'true':'false');
  const avatar=document.createElement('span');avatar.className='avatar';avatar.textContent=(c.name&&c.name!==c.phone?c.name.split(/\s+/).map(w=>w[0]).slice(0,2).join(''):c.phone.slice(-2)).toUpperCase();
@@ -60,9 +61,11 @@ $('archive').onclick=()=>{const c=selected();if(c&&confirm('Archive this convers
 window.addEventListener('message',event=>{if(event.source!==window.parent||event.data?.type!=='streamlit:render')return;args=event.data.args||{};data=args.conversations||[];const result=args.result;
  if(result&&result.id!==lastAck){lastAck=result.id;pending=null;setText('feedback',result.message||'');$('feedback').className=result.ok?'':'error';if(result.ok&&result.type==='send'){const k=JSON.stringify([result.channel,result.phone,result.sender]);drafts.delete(k);if(selectedKey===k)$('reply').value='';}if(result.ok&&result.type==='archive'&&selectedKey===result.key){selectedKey=null;document.body.classList.remove('open');}buttons();}
  if(args.filters){currentChannel=args.filters.channel||'ALL';$('days').value=String(args.filters.hours||24);for(const btn of document.querySelectorAll('[data-channel]'))btn.classList.toggle('active',btn.dataset.channel===currentChannel);}
- renderList();renderChat();post('streamlit:setFrameHeight',{height:Math.max(660,Math.min(Number(args.height)||740,1000))});});
-post('streamlit:componentReady',{apiVersion:1});post('streamlit:setFrameHeight',{height:740});
+ renderList();renderChat();frameHeight(Math.max(660,Math.min(Number(args.height)||740,1000)));});
+function frameHeight(height){if(height===lastFrameHeight)return;lastFrameHeight=height;post('streamlit:setFrameHeight',{height});}
+post('streamlit:componentReady',{apiVersion:1});frameHeight(740);
 </script></body></html>
+
 
 
 
