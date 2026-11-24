@@ -121,3 +121,26 @@ number thread. **Resume Ale** applies to future messages in that same thread;
 other conversations are unaffected and SMS opt-outs are still enforced.
 
 
+
+
+## On-demand caller ID details in Messages
+
+Click a conversation's phone number in its header to open a native dialog styled
+as a side panel. It shows the same caller lookup's patient number, DOB, last visit,
+next appointment, location, optical/contact-lens order status/dates and latest
+text today. Shared numbers show separate patient cards. Close or Escape returns
+to the inbox without sending anything or losing the draft.
+
+Install `Ale-Caller-Patient-Details.zip` on the VM caller ID backend. The endpoint
+requires the existing caller API key and reuses `lookup_family` and
+`serialize_patient`; no new SQL lookup or identity rules are introduced. Only
+explicitly clicked conversations request details. Server-side login/permission
+checks and conversation scope validation precede the call. Keys never enter the
+component. Responses whitelist displayed fields; patient data is never passed to
+Ale's model. The existing name-only endpoint remains name-only.
+
+Pending lookups run on a dedicated two-thread executor, bounded to 16 outstanding
+phones, with a 60-second successful-result cache. The panel polls pending results
+on existing five-second messaging updates for at most 45 seconds. Closing clears
+rendered details and late results cannot reopen it. Only caller ID monitoring
+restarts for the VM install; voice, messaging, bookingapp and ngrok stay running.

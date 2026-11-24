@@ -4,7 +4,7 @@ function setup(){
  const elements=new Map(),tags=[],posts=[],listeners={};
  class Element{
   constructor(tag){this.tag=tag;this.children=[];this.style={};this.dataset={};this.value='';this.scrollTop=0;this.scrollHeight=500;this.clientHeight=500;this.classList={toggle(){},add(){},remove(){}};}
-  append(...values){this.children.push(...values)}appendChild(value){this.children.push(value)}replaceChildren(...values){this.children=values}setAttribute(){}focus(){}
+  append(...values){this.children.push(...values)}appendChild(value){this.children.push(value)}replaceChildren(...values){this.children=values}setAttribute(){}focus(){}showModal(){this.open=true}close(){this.open=false;if(this.onclose)this.onclose()}
  }
  const get=id=>{if(!elements.has(id))elements.set(id,new Element('div'));return elements.get(id)};
  const filters=['ALL','WHATSAPP','SMS'].map(channel=>{const e=new Element('button');e.dataset.channel=channel;return e});
@@ -14,7 +14,7 @@ function setup(){
  vm.runInNewContext(source,{document,window,crypto:webcrypto,Uint8Array,Intl,Date,JSON,Map,Number,String,Math,confirm:()=>true});
  const a={channel:'SMS',phone:'+13055550123',sender:'+13055550124',name:'Ana Example',patient_names:['Ana Example'],paused:false,messages:[{direction:'inbound',message:'<img src=x onerror=alert(1)>',timestamp:'2026-11-23T10:00:00Z'}]};
  const b={...a,channel:'WHATSAPP',sender:'app-id',name:'Luis Example',patient_names:['Luis Example'],messages:[]};
- const render=(result,errors={})=>listeners.message({source:parent,data:{type:'streamlit:render',args:{conversations:[a,b],filters:{channel:'ALL',days:1,hours:24},result,errors}}});
+ const render=(result,errors={},details=null)=>listeners.message({source:parent,data:{type:'streamlit:render',args:{conversations:[a,b],filters:{channel:'ALL',days:1,hours:24},result,errors,details}}});
  const latest=()=>posts.filter(p=>p.type==='streamlit:setComponentValue').slice(-1)[0]?.value;
  const ack=()=>{const p=latest();if(p)render({id:p.id,type:p.type,ok:true,message:''})};
  render();return {get,posts,tags,render,latest,ack,document,a,b};
@@ -42,3 +42,7 @@ test('short time windows emit hours instead of long day windows',()=>{const s=se
 
 test('background updates preserve draft, selected thread and reading position',()=>{const s=setup();s.get('list').children[0].onclick();s.get('reply').value='Unsent draft';s.get('reply').oninput();s.get('messages').scrollHeight=2000;s.get('messages').scrollTop=120;s.a.messages.push({direction:'inbound',message:'New message',timestamp:'2026-11-24T12:00:00Z'});s.render();assert.equal(s.get('reply').value,'Unsent draft');assert.equal(s.get('messages').scrollTop,120);assert.equal(s.get('person-name').textContent,'Ana Example');const rows=s.get('messages').children.filter(e=>e.className?.startsWith('bubble-row'));assert.equal(rows.at(-1).children[0].children[0].textContent,'New message');assert.equal(s.posts.filter(p=>p.type==='streamlit:setComponentValue').length,0)});
 test('unchanged background updates keep DOM nodes and avoid repeated resize messages',()=>{const s=setup();s.get('list').children[0].onclick();const row=s.get('list').children[0],bubble=s.get('messages').children[1];const heights=s.posts.filter(p=>p.type==='streamlit:setFrameHeight').length;s.render();s.render();assert.equal(s.get('list').children[0],row);assert.equal(s.get('messages').children[1],bubble);assert.equal(s.posts.filter(p=>p.type==='streamlit:setFrameHeight').length,heights)});
+
+
+test('number click opens scoped patient panel and keeps draft through detail updates',()=>{const s=setup();s.get('list').children[0].onclick();s.get('reply').value='Unsent draft';s.get('person-phone').onclick();const action=s.latest();assert.equal(action.type,'details');assert.equal(action.phone,s.a.phone);assert.equal(s.get('patient-details').open,true);s.render({id:action.id,type:'details',ok:true,message:''},{},{id:action.id,scope:[s.a.channel,s.a.phone,s.a.sender],profile:{status:'matched',shared:true,patients:[{name:'<img src=x>',patient_no:'123',dob:'1962-04-15'}]}});assert.equal(s.get('reply').value,'Unsent draft');assert.equal(s.tags.includes('img'),false);assert.equal(s.get('detail-content').children[1].children[0].textContent,'<img src=x>');s.get('detail-close').onclick();assert.equal(s.get('patient-details').open,false);assert.equal(s.get('detail-content').children.length,0);s.render();assert.equal(s.get('patient-details').open,false)});
+test('details do not load on refresh or ordinary conversation selection',()=>{const s=setup();s.get('list').children[0].onclick();s.render();s.render();assert.equal(s.posts.filter(p=>p.type==='streamlit:setComponentValue'&&p.value.type==='details').length,0)});

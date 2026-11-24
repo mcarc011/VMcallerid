@@ -46,6 +46,9 @@ def process_action(action,conversations,call):
     channel,phone,sender=scope
     if kind=='select':return {**result,'ok':True,'selected':phone,'message':''}
     result.update(channel=channel,phone=phone,sender=sender)
+    if kind=='details':
+        from caller_details import get_patient_details
+        return {**result,'ok':True,'profile':get_patient_details(phone),'message':''}
     if kind=='send':
         text=action.get('text');request_id=action.get('request_id')
         if not isinstance(text,str) or not 1<=len(text.strip())<=3000 or not isinstance(request_id,str) or not re.fullmatch(r'[a-f0-9]{32}',request_id):raise ValueError('Enter a reply of up to 3000 characters.')
@@ -92,7 +95,17 @@ def draw_workspace(call,caller_login=False):
     conversations,name_error=with_patient_names(conversations,preferred=st.session_state.get('_ale_workspace_selected'))
     if name_error:errors['patient_names']=name_error
     errors={**data.get('errors',{}),**errors}
-    action=_workspace(conversations=conversations,filters=filters,errors=errors,result=st.session_state.get('_ale_workspace_result'),height=740,key='ale_workspace_component',default=None)
+    details=st.session_state.get('_ale_workspace_details')
+    if details:
+        scope=details['scope']
+        if not any((c.get('channel'),c.get('phone'),c.get('sender'))==tuple(scope) for c in conversations):
+            st.session_state.pop('_ale_workspace_details',None);details=None
+        elif details['profile'].get('status')=='pending':
+            if time.monotonic()>details['until']:details['profile']={'status':'unavailable','patients':[]}
+            else:
+                from caller_details import get_patient_details
+                details['profile']=get_patient_details(scope[1])
+    action=_workspace(details=details,conversations=conversations,filters=filters,errors=errors,result=st.session_state.get('_ale_workspace_result'),height=740,key='ale_workspace_component',default=None)
     if not isinstance(action,dict):return
     event_id=action.get('id');handled=st.session_state.get('_ale_workspace_handled',[])
     if not isinstance(event_id,str) or event_id in handled:return
@@ -100,15 +113,18 @@ def draw_workspace(call,caller_login=False):
     st.session_state['_ale_workspace_handled']=(handled+[event_id])[-100:]
     try:
         result=process_action(action,conversations,call)
+        if result['ok'] and result['type']=='details':
+            st.session_state['_ale_workspace_details']={'id':result['id'],'scope':[result['channel'],result['phone'],result['sender']],'profile':result.pop('profile'),'until':time.monotonic()+45}
         if result.get('selected'):st.session_state['_ale_workspace_selected']=result['selected']
         if result.get('filters'):st.session_state['_ale_workspace_filters']=result['filters']
-        if result['ok']:st.session_state.pop('_ale_workspace_cache',None)
+        if result['ok'] and result['type']!='details':st.session_state.pop('_ale_workspace_cache',None)
     except PermissionError:
         st.session_state.pop('_ale_workspace_cache',None);st.error('Caller ID messaging connection authorization was rejected.' if caller_login else 'Messaging sign-in expired.');return
     except ValueError as error:result={'id':event_id,'type':action.get('type'),'ok':False,'message':str(error)}
     except requests.RequestException:result={'id':event_id,'type':action.get('type'),'ok':False,'message':'Request outcome unknown. Check Sinch before retrying a send; this action will not be replayed automatically.'}
     st.session_state['_ale_workspace_result']=result
     st.rerun(scope='fragment')
+
 
 
 
