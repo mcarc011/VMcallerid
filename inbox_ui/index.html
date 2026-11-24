@@ -42,7 +42,7 @@ function renderChat(force=false){
  const c=selected();$('empty').style.display=c?'none':'flex';$('thread-view').style.display=c?'flex':'none';if(!c)return;
  setText('person-name',c.name||c.phone);setText('person-phone',c.phone);setText('business',(c.offices||[]).length?c.offices.join(' / '):(c.channel==='SMS'?'Office number: '+c.sender:'Vision Unlimited'));setText('patient-names',(c.patient_names||[]).length>1?'Patients: '+c.patient_names.join('  |  '):'');$('patient-names').title=(c.patient_names||[]).join('  |  ');const badge=$('channel-badge');badge.className='badge '+(c.channel==='SMS'?'sms':'wa');badge.textContent=c.channel==='SMS'?'SMS':'WhatsApp';
  setText('ale-status',c.paused?'Staff handling':'Ale active');$('ale-status').className='status-chip'+(c.paused?' paused':'');setText('mode',c.paused?'Resume Ale':'Take over');
- const notice=Object.values(args.errors||{}).join(' ')+(c.opted_out?' This conversation is opted out.':'');$('notice').style.display=notice?'block':'none';setText('notice',notice);
+ const notice=Object.entries(args.errors||{}).filter(([key])=>key!=='offices').map(([,value])=>value).join(' ')+(c.opted_out?' This conversation is opted out.':'');$('notice').style.display=notice?'block':'none';setText('notice',notice);
  const signature=JSON.stringify([selectedKey,c.messages]);if(signature===lastSignature&&!force)return;lastSignature=signature;const panel=$('messages'),nearBottom=panel.scrollHeight-panel.scrollTop-panel.clientHeight<90,scroll=panel.scrollTop;panel.replaceChildren();let day='';
  for(const m of c.messages||[]){const date=timeLabel(m.timestamp,true);if(date!==day){const d=document.createElement('div');d.className='day';d.textContent=date;panel.appendChild(d);day=date;}
  const line=document.createElement('div');line.className='bubble-row'+(m.direction==='outbound'?' out'+(m.actor==='ale'?' ale':''):'');const bubble=document.createElement('div');bubble.className='bubble';const text=document.createElement('div');text.className='message-text';text.textContent=m.message||'';const stamp=document.createElement('div');stamp.className='message-time';const actor=document.createElement('span');actor.className='sender-tag';actor.textContent=m.direction==='outbound'?(m.actor==='ale'?'Ale':m.actor==='staff'?'Staff':'Office'):'Patient';const clock=document.createElement('span');clock.textContent=timeLabel(m.timestamp);stamp.append(actor,clock);bubble.append(text,stamp);line.appendChild(bubble);panel.appendChild(line);}
@@ -63,4 +63,5 @@ window.addEventListener('message',event=>{if(event.source!==window.parent||event
  renderList();renderChat();post('streamlit:setFrameHeight',{height:Math.max(660,Math.min(Number(args.height)||740,1000))});});
 post('streamlit:componentReady',{apiVersion:1});post('streamlit:setFrameHeight',{height:740});
 </script></body></html>
+
 

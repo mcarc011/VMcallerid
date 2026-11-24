@@ -14,7 +14,7 @@ function setup(){
  vm.runInNewContext(source,{document,window,crypto:webcrypto,Uint8Array,Intl,Date,JSON,Map,Number,String,Math,confirm:()=>true});
  const a={channel:'SMS',phone:'+13055550123',sender:'+13055550124',name:'Ana Example',patient_names:['Ana Example'],paused:false,messages:[{direction:'inbound',message:'<img src=x onerror=alert(1)>',timestamp:'2026-11-23T10:00:00Z'}]};
  const b={...a,channel:'WHATSAPP',sender:'app-id',name:'Luis Example',patient_names:['Luis Example'],messages:[]};
- const render=result=>listeners.message({source:parent,data:{type:'streamlit:render',args:{conversations:[a,b],filters:{channel:'ALL',days:90},result}}});
+ const render=(result,errors={})=>listeners.message({source:parent,data:{type:'streamlit:render',args:{conversations:[a,b],filters:{channel:'ALL',days:90},result,errors}}});
  const latest=()=>posts.filter(p=>p.type==='streamlit:setComponentValue').slice(-1)[0]?.value;
  const ack=()=>{const p=latest();if(p)render({id:p.id,type:p.type,ok:true,message:''})};
  render();return {get,posts,tags,render,latest,ack,document,a,b};
@@ -32,3 +32,6 @@ test('opening a conversation does not trigger a Streamlit rerun',()=>{const s=se
 test('Ale replies are purple and labeled; staff and unknown outbound stay distinct',()=>{const s=setup();s.a.messages=[{direction:'outbound',actor:'ale',message:'AI reply'},{direction:'outbound',actor:'staff',message:'Staff reply'},{direction:'outbound',message:'Legacy reply'},{direction:'inbound',actor:'ale',message:'Patient'}];s.render();s.get('list').children[0].onclick();const rows=s.get('messages').children.filter(e=>e.className?.startsWith('bubble-row'));assert.equal(rows[0].className,'bubble-row out ale');assert.equal(rows[1].className,'bubble-row out');assert.equal(rows[2].className,'bubble-row out');assert.equal(rows[3].className,'bubble-row');assert.equal(rows[0].children[0].children[1].children[0].textContent,'Ale');assert.equal(rows[1].children[0].children[1].children[0].textContent,'Staff');assert.equal(rows[2].children[0].children[1].children[0].textContent,'Office')});
 
 test('VUM filter works without an office selector',()=>{const s=setup();s.a.latest_vum_automation=true;s.b.latest_vum_automation=false;s.render();s.get('automation').value='hide';s.get('automation').onchange();assert.equal(s.get('list').children.length,1);s.get('automation').value='only';s.get('automation').onchange();assert.equal(s.get('list').children.length,1);s.get('automation').value='all';s.get('automation').onchange();assert.equal(s.get('list').children.length,2)});
+
+
+test('retired office warning is hidden while other service warnings remain',()=>{const s=setup();s.render(undefined,{offices:'Appointment-office lookup unavailable.',SMS:'SMS history unavailable.'});s.get('list').children[0].onclick();assert.equal(s.get('notice').textContent,'SMS history unavailable.');});
