@@ -10,11 +10,11 @@ function setup(){
  const filters=['ALL','WHATSAPP','SMS'].map(channel=>{const e=new Element('button');e.dataset.channel=channel;return e});
  const document={getElementById:get,querySelectorAll:()=>filters,body:new Element('body'),createElement:tag=>{tags.push(tag);return new Element(tag)}};
  const parent={postMessage:message=>posts.push(message)},window={parent,addEventListener:(name,fn)=>listeners[name]=fn};
- get('days').value='90';get('view').value='all';
+ get('days').value='24';get('view').value='all';
  vm.runInNewContext(source,{document,window,crypto:webcrypto,Uint8Array,Intl,Date,JSON,Map,Number,String,Math,confirm:()=>true});
  const a={channel:'SMS',phone:'+13055550123',sender:'+13055550124',name:'Ana Example',patient_names:['Ana Example'],paused:false,messages:[{direction:'inbound',message:'<img src=x onerror=alert(1)>',timestamp:'2026-11-23T10:00:00Z'}]};
  const b={...a,channel:'WHATSAPP',sender:'app-id',name:'Luis Example',patient_names:['Luis Example'],messages:[]};
- const render=(result,errors={})=>listeners.message({source:parent,data:{type:'streamlit:render',args:{conversations:[a,b],filters:{channel:'ALL',days:90},result,errors}}});
+ const render=(result,errors={})=>listeners.message({source:parent,data:{type:'streamlit:render',args:{conversations:[a,b],filters:{channel:'ALL',days:1,hours:24},result,errors}}});
  const latest=()=>posts.filter(p=>p.type==='streamlit:setComponentValue').slice(-1)[0]?.value;
  const ack=()=>{const p=latest();if(p)render({id:p.id,type:p.type,ok:true,message:''})};
  render();return {get,posts,tags,render,latest,ack,document,a,b};
@@ -35,3 +35,6 @@ test('VUM filter works without an office selector',()=>{const s=setup();s.a.late
 
 
 test('retired office warning is hidden while other service warnings remain',()=>{const s=setup();s.render(undefined,{offices:'Appointment-office lookup unavailable.',SMS:'SMS history unavailable.'});s.get('list').children[0].onclick();assert.equal(s.get('notice').textContent,'SMS history unavailable.');});
+
+
+test('short time windows emit hours instead of long day windows',()=>{const s=setup();s.get('days').value='4';s.get('days').onchange();assert.equal(s.latest().hours,4);assert.equal(s.latest().days,undefined)});

@@ -1,5 +1,6 @@
 """Whatsappy-style inbox component. Credentials never enter component arguments."""
 import re,time
+from datetime import datetime,timezone
 from pathlib import Path
 import requests
 import streamlit as st
@@ -10,10 +11,25 @@ _workspace=declare_component('ale_staff_inbox',path=str(Path(__file__).with_name
 
 def filters_for(value):
     value=value if isinstance(value,dict) else {}
-    channel=value.get('channel','ALL');days=value.get('days',90);recipient=value.get('recipient','')
-    if channel not in {'ALL','SMS','WHATSAPP'} or type(days) is not int or days not in {30,90,365}:raise ValueError('Invalid history filter')
+    channel=value.get('channel','ALL');days=value.get('days',1);hours=value.get('hours',24);recipient=value.get('recipient','')
+    if channel not in {'ALL','SMS','WHATSAPP'} or type(days) is not int or days not in {1,30,90,365} or type(hours) is not int or hours not in {4,24}:raise ValueError('Invalid history filter')
     if not isinstance(recipient,str) or len(recipient)>40 or (recipient and not re.fullmatch(r'\+?[0-9 ().-]{7,40}',recipient)):raise ValueError('Enter a valid phone number to search older history.')
-    return {'channel':channel,'days':days,'recipient':recipient}
+    return {'channel':channel,'days':1,'hours':hours,'recipient':recipient}
+
+
+def recent_conversations(conversations,hours,now=None):
+    cutoff=(time.time() if now is None else now)-hours*3600
+    result=[]
+    for conversation in conversations:
+        stamps=[]
+        for message in conversation.get('messages',[]):
+            try:
+                stamp=datetime.fromisoformat(str(message.get('timestamp','')).replace('Z','+00:00'))
+                if stamp.tzinfo is None:continue
+                stamps.append(stamp.timestamp())
+            except (ValueError,TypeError):continue
+        if stamps and max(stamps)>=cutoff:result.append(conversation)
+    return result
 
 
 def process_action(action,conversations,call):
@@ -61,7 +77,7 @@ def draw_workspace(call,caller_login=False):
     errors={}
     try:
         if not cache or cache['filters']!=filters or time.monotonic()-cache['time']>=9:
-            response=call('GET','/messages/history',params={k:v for k,v in filters.items() if v!=''})
+            response=call('GET','/messages/history',params={k:v for k,v in filters.items() if v!='' and k!='hours'})
             if response.status_code!=200:raise requests.RequestException('History unavailable')
             data=response.json()
             if not isinstance(data.get('conversations'),list):raise ValueError('Invalid history response')
@@ -71,7 +87,7 @@ def draw_workspace(call,caller_login=False):
     except (requests.RequestException,ValueError):
         if not cache:st.error('Could not load the inbox. Refresh or check the messaging service.');return
         errors['refresh']='Refresh unavailable. Showing the last loaded messages.'
-    data=cache['data'];conversations=data.get('conversations',[])
+    data=cache['data'];conversations=recent_conversations(data.get('conversations',[]),filters['hours'])
     from patient_names import with_patient_names
     conversations,name_error=with_patient_names(conversations,preferred=st.session_state.get('_ale_workspace_selected'))
     if name_error:errors['patient_names']=name_error
@@ -93,4 +109,5 @@ def draw_workspace(call,caller_login=False):
     except requests.RequestException:result={'id':event_id,'type':action.get('type'),'ok':False,'message':'Request outcome unknown. Check Sinch before retrying a send; this action will not be replayed automatically.'}
     st.session_state['_ale_workspace_result']=result
     st.rerun(scope='fragment')
+
 
