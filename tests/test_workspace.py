@@ -32,4 +32,19 @@ class WorkspaceTests(unittest.TestCase):
  def test_failed_send_remains_failed(self):
   call=Mock();call.return_value.status_code=502;call.return_value.json.return_value={'detail':'Acceptance uncertain'}
   result=self.module.process_action(self.action(type='send',text='Reply',request_id='b'*32),[self.thread],call);self.assertFalse(result['ok']);self.assertEqual(call.call_count,1)
-if __name__=='__main__':unittest.main()
+
+
+ def test_short_windows_and_legacy_session_migration(self):
+  self.assertEqual(self.module.filters_for({})['hours'],24)
+  self.assertEqual(self.module.filters_for({'hours':4})['days'],1)
+  self.assertEqual(self.module.filters_for({'days':90})['hours'],24)
+  with self.assertRaises(ValueError):self.module.filters_for({'hours':60})
+ def test_latest_activity_filters_threads_and_keeps_context(self):
+  from datetime import datetime,timezone
+  now=1800000000
+  def conversation(age):return {'messages':[{'timestamp':datetime.fromtimestamp(now-80000,timezone.utc).isoformat(),'message':'Earlier context'},{'timestamp':datetime.fromtimestamp(now-age,timezone.utc).isoformat(),'message':'Latest'}]}
+  recent=conversation(3600);old=conversation(5*3600)
+  self.assertEqual(self.module.recent_conversations([recent,old],4,now),[recent])
+  self.assertEqual(len(self.module.recent_conversations([recent,old],24,now)),2)
+  self.assertEqual(len(recent['messages']),2)
+  self.assertEqual(self.module.recent_conversations([{'messages':[{'timestamp':'invalid'}]}],24,now),[])
